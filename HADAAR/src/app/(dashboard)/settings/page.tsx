@@ -6,6 +6,7 @@
 // ====================================================================
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import {
   Settings,
   Building2,
@@ -14,7 +15,14 @@ import {
   Shield,
   Save,
   CheckCircle,
-  RotateCcw
+  RotateCcw,
+  Share2,
+  Copy,
+  ExternalLink,
+  MessageSquare,
+  GraduationCap,
+  Smartphone,
+  Check
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/context';
 import { useData } from '@/lib/store/data-context';
@@ -24,12 +32,39 @@ export default function SettingsPage() {
   const { t } = useI18n();
   const { currentCenter, updateCenterSettings, resetToDefaults } = useData();
 
-  const [activeTab, setActiveTab] = useState<'general' | 'attendance' | 'qr'>('attendance');
+  const [activeTab, setActiveTab] = useState<'attendance' | 'general' | 'links' | 'qr'>('attendance');
 
   const [graceMinutes, setGraceMinutes] = useState(currentCenter.settings.late_grace_minutes || 15);
   const [requireCheckout, setRequireCheckout] = useState(currentCenter.settings.require_checkout || false);
   const [whatsapp, setWhatsapp] = useState(currentCenter.settings.contact_whatsapp || '201012345678');
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  const getBaseOrigin = () => {
+    if (typeof window !== 'undefined') {
+      return window.location.origin;
+    }
+    return 'https://hadar.madaar.io';
+  };
+
+  const portalUrl = `${getBaseOrigin()}/c/${currentCenter.slug}/portal`;
+  const scannerUrl = `${getBaseOrigin()}/c/${currentCenter.slug}/scanner`;
+  const centerHubUrl = `${getBaseOrigin()}/c/${currentCenter.slug}`;
+
+  const copyToClipboard = (text: string, key: string) => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+      setCopiedKey(key);
+      setTimeout(() => setCopiedKey(null), 2500);
+    }
+  };
+
+  const shareWhatsApp = (text: string) => {
+    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    if (typeof window !== 'undefined') {
+      window.open(url, '_blank');
+    }
+  };
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,6 +123,18 @@ export default function SettingsPage() {
         >
           <Building2 className="w-4 h-4 text-[#27877E]" />
           <span>بيانات السنتر والاتصال</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('links')}
+          className={`pb-3 transition flex items-center gap-2 ${
+            activeTab === 'links'
+              ? 'border-b-2 border-[#C7A66A] text-[#111D2D]'
+              : 'text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <Share2 className="w-4 h-4 text-[#C7A66A]" />
+          <span>روابط السنتر المخصصة</span>
         </button>
 
         <button
@@ -193,6 +240,152 @@ export default function SettingsPage() {
                 value={currentCenter.address || 'القاهرة، مصر'}
                 className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-50"
               />
+            </div>
+          </div>
+        )}
+
+        {/* Tab 3: Dedicated Center Links */}
+        {activeTab === 'links' && (
+          <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-6 text-xs">
+            <div>
+              <h2 className="text-sm font-bold text-[#111D2D] mb-1 flex items-center gap-2">
+                <Share2 className="w-4 h-4 text-[#C7A66A]" />
+                الروابط المخصصة للمركز التعليمي
+              </h2>
+              <p className="text-xs text-slate-500">
+                يمكنك مشاركة هذه الروابط مع الطلاب وأولياء الأمور والمساعدين. كل رابط مخصص لسنترك حصراً.
+              </p>
+            </div>
+
+            {/* Slug Info */}
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+              <div>
+                <span className="font-bold text-[#111D2D] block">المعرف الفريد لرابط السنتر (Slug):</span>
+                <span className="font-mono text-emerald-700 font-bold">{currentCenter.slug}</span>
+              </div>
+              <span className="px-2.5 py-1 rounded-full text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold">
+                نشط وموثق
+              </span>
+            </div>
+
+            {/* Links List */}
+            <div className="space-y-4">
+              {/* Portal Link */}
+              <div className="p-4 rounded-xl border border-slate-200 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-[#111D2D] flex items-center gap-1.5">
+                    <GraduationCap className="w-4 h-4 text-[#27877E]" />
+                    رابط بوابة الطلاب وأولياء الأمور
+                  </span>
+                  <Link
+                    href={`/c/${currentCenter.slug}/portal`}
+                    target="_blank"
+                    className="text-[#27877E] hover:underline inline-flex items-center gap-1 font-semibold text-[11px]"
+                  >
+                    <span>معاينة البوابة</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </Link>
+                </div>
+                <div className="p-2 bg-slate-50 rounded-lg border border-slate-200 font-mono text-[11px] text-slate-700">
+                  {portalUrl}
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => copyToClipboard(portalUrl, 'settings-portal')}
+                    className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 font-bold text-slate-700 flex items-center gap-1.5"
+                  >
+                    {copiedKey === 'settings-portal' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>نسخ</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      shareWhatsApp(
+                        `أهلاً بكم في ${currentCenter.name_ar} 🎓\nيمكنكم الآن متابعة حضور وغياب الطالب، جدول الحصص، وبطاقة الـ QR عبر الرابط:\n${portalUrl}`
+                      )
+                    }
+                    className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center gap-1.5"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    <span>مشاركة عبر واتساب</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Scanner Link */}
+              <div className="p-4 rounded-xl border border-slate-200 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-[#111D2D] flex items-center gap-1.5">
+                    <Smartphone className="w-4 h-4 text-[#C7A66A]" />
+                    رابط ماسح الـ QR السريع للأسيستانت
+                  </span>
+                  <Link
+                    href={`/c/${currentCenter.slug}/scanner`}
+                    target="_blank"
+                    className="text-[#C7A66A] hover:underline inline-flex items-center gap-1 font-semibold text-[11px]"
+                  >
+                    <span>معاينة الماسح</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </Link>
+                </div>
+                <div className="p-2 bg-slate-50 rounded-lg border border-slate-200 font-mono text-[11px] text-slate-700">
+                  {scannerUrl}
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => copyToClipboard(scannerUrl, 'settings-scanner')}
+                    className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 font-bold text-slate-700 flex items-center gap-1.5"
+                  >
+                    {copiedKey === 'settings-scanner' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>نسخ</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      shareWhatsApp(
+                        `فريق عمل ${currentCenter.name_ar} 📱\nرابط تسجيل حضور وانصراف الطلاب بالماسح السريع:\n${scannerUrl}`
+                      )
+                    }
+                    className="px-3 py-1.5 rounded-lg bg-[#111D2D] hover:bg-[#1E2A3D] text-[#C7A66A] font-bold flex items-center gap-1.5"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    <span>إرسال للأسيستانت</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Hub Link */}
+              <div className="p-4 rounded-xl border border-slate-200 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-[#111D2D] flex items-center gap-1.5">
+                    <Building2 className="w-4 h-4 text-[#111D2D]" />
+                    صفحة المركز الرقمية الرئيسية
+                  </span>
+                  <Link
+                    href={`/c/${currentCenter.slug}`}
+                    target="_blank"
+                    className="text-[#111D2D] hover:underline inline-flex items-center gap-1 font-semibold text-[11px]"
+                  >
+                    <span>معاينة الصفحة</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </Link>
+                </div>
+                <div className="p-2 bg-slate-50 rounded-lg border border-slate-200 font-mono text-[11px] text-slate-700">
+                  {centerHubUrl}
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => copyToClipboard(centerHubUrl, 'settings-hub')}
+                    className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 font-bold text-slate-700 flex items-center gap-1.5"
+                  >
+                    {copiedKey === 'settings-hub' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>نسخ</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}

@@ -6,7 +6,7 @@
 // Colors: Midnight Navy (#111D2D), Champagne Gold (#C7A66A), Deep Teal (#27877E)
 // ====================================================================
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -24,7 +24,14 @@ import {
   ChevronLeft,
   DollarSign,
   TrendingUp,
-  MessageSquare
+  MessageSquare,
+  Share2,
+  Copy,
+  ExternalLink,
+  Smartphone,
+  Check,
+  Sparkles,
+  GraduationCap
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -52,6 +59,34 @@ export default function DashboardPage() {
     subscriptions,
     notifications
   } = useData();
+
+  // Shareable links state
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  const getBaseOrigin = () => {
+    if (typeof window !== 'undefined') {
+      return window.location.origin;
+    }
+    return 'https://hadar.madaar.io';
+  };
+
+  const portalUrl = `${getBaseOrigin()}/c/${currentCenter.slug}/portal`;
+  const scannerUrl = `${getBaseOrigin()}/c/${currentCenter.slug}/scanner`;
+
+  const copyToClipboard = (text: string, key: string) => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+      setCopiedKey(key);
+      setTimeout(() => setCopiedKey(null), 2500);
+    }
+  };
+
+  const shareWhatsApp = (text: string) => {
+    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    if (typeof window !== 'undefined') {
+      window.open(url, '_blank');
+    }
+  };
 
   // Dynamic KPI Calculations from actual data
   const totalStudentsCount = students.length;
@@ -144,6 +179,143 @@ export default function DashboardPage() {
             <UserPlus className="w-4 h-4" />
             <span>إضافة طالب</span>
           </Link>
+        </div>
+      </div>
+
+      {/* Shareable Links Section for Center Owner */}
+      <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-[#C7A66A]/15 text-[#111D2D] flex items-center justify-center">
+              <Share2 className="w-4 h-4 text-[#C7A66A]" />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-[#111D2D] flex items-center gap-2">
+                <span>روابط سنترك المخصصة للمشاركة</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">
+                  خاصة بسنترك فقط
+                </span>
+              </h2>
+              <p className="text-xs text-slate-500">
+                شارك هذه الروابط مع طلابك ومساعديك للوصول المباشر دون الحاجة لحساب المنظومة العام
+              </p>
+            </div>
+          </div>
+
+          <Link
+            href={`/c/${currentCenter.slug}`}
+            target="_blank"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-[#27877E] hover:underline"
+          >
+            <span>معاينة صفحة السنتر</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          {/* Card 1: Student & Parent Portal */}
+          <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white hover:border-[#27877E]/50 transition flex flex-col justify-between space-y-3">
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="font-bold text-[#111D2D] flex items-center gap-1.5">
+                  <GraduationCap className="w-4 h-4 text-[#27877E]" />
+                  رابط بوابة الطالب وولي الأمر
+                </span>
+                <span className="text-[10px] text-slate-400">للطلاب وأولياء الأمور</span>
+              </div>
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                لمتابعة الحضور، عرض كارت الـ QR الشخصي، جدول الحصص والاشتراكات.
+              </p>
+              <div className="mt-2 p-2 rounded-lg bg-white border border-slate-200 font-mono text-[11px] text-[#27877E] truncate">
+                {portalUrl}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => copyToClipboard(portalUrl, 'portal')}
+                className="flex-1 py-1.5 px-3 rounded-lg bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 hover:border-slate-300 transition flex items-center justify-center gap-1.5 text-xs"
+              >
+                {copiedKey === 'portal' ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                    <span className="text-emerald-700">تم النسخ</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5 text-slate-500" />
+                    <span>نسخ الرابط</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  shareWhatsApp(
+                    `أهلاً بكم في ${currentCenter.name_ar} 🎓\nيمكنكم الآن متابعة حضور وغياب الطالب، جدول الحصص، وبطاقة الـ QR عبر الرابط المباشر:\n${portalUrl}`
+                  )
+                }
+                className="py-1.5 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition flex items-center justify-center gap-1.5 text-xs"
+              >
+                <MessageSquare className="w-3.5 h-3.5" />
+                <span>واتساب</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Card 2: Assistant QR Scanner */}
+          <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white hover:border-[#C7A66A]/50 transition flex flex-col justify-between space-y-3">
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="font-bold text-[#111D2D] flex items-center gap-1.5">
+                  <Smartphone className="w-4 h-4 text-[#C7A66A]" />
+                  رابط ماسح الـ QR السريع للأسيستانت
+                </span>
+                <span className="text-[10px] text-slate-400">لفريق العمل والمشرفين</span>
+              </div>
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                رابط مباشر للأسيستانت لفتح كاميرا الهاتف ومسح كروت الطلاب دون الدخول للوحة التحكم.
+              </p>
+              <div className="mt-2 p-2 rounded-lg bg-white border border-slate-200 font-mono text-[11px] text-[#C7A66A] truncate">
+                {scannerUrl}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => copyToClipboard(scannerUrl, 'scanner')}
+                className="flex-1 py-1.5 px-3 rounded-lg bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 hover:border-slate-300 transition flex items-center justify-center gap-1.5 text-xs"
+              >
+                {copiedKey === 'scanner' ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                    <span className="text-emerald-700">تم النسخ</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5 text-slate-500" />
+                    <span>نسخ الرابط</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  shareWhatsApp(
+                    `فريق عمل ${currentCenter.name_ar} 📱\nرابط تسجيل حضور وانصراف الطلاب بالماسح السريع:\n${scannerUrl}`
+                  )
+                }
+                className="py-1.5 px-3 rounded-lg bg-[#111D2D] hover:bg-[#1E2A3D] text-[#C7A66A] font-bold transition flex items-center justify-center gap-1.5 text-xs"
+              >
+                <MessageSquare className="w-3.5 h-3.5" />
+                <span>واتساب</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 

@@ -7,6 +7,8 @@
 // ====================================================================
 
 import React, { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   ShieldAlert,
   Building2,
@@ -21,13 +23,19 @@ import {
   Layers,
   Sparkles,
   TrendingUp,
-  X
+  X,
+  ExternalLink,
+  Lock,
+  LogIn,
+  GraduationCap,
+  Smartphone
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/context';
 import { useData } from '@/lib/store/data-context';
 import { Center, SubscriptionPlan, SubscriptionPlanTier } from '@/types/database';
 
 export default function SuperAdminPage() {
+  const router = useRouter();
   const { t } = useI18n();
   const {
     allCenters,
@@ -35,7 +43,9 @@ export default function SuperAdminPage() {
     students,
     addCenter,
     updateCenterTier,
-    updatePlan
+    updatePlan,
+    switchCenter,
+    switchUserRole
   } = useData();
 
   const [showAddCenterModal, setShowAddCenterModal] = useState(false);
@@ -131,6 +141,39 @@ export default function SuperAdminPage() {
 
   return (
     <div className="space-y-6">
+      {/* Super Admin Sovereign Banner */}
+      <div className="bg-[#111D2D] text-white p-5 rounded-2xl border border-[#C7A66A]/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-card">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#C7A66A] to-[#8C6F3B] p-[2px] flex-shrink-0">
+            <div className="w-full h-full bg-[#111D2D] rounded-[10px] flex items-center justify-center">
+              <Lock className="w-6 h-6 text-[#C7A66A]" />
+            </div>
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-extrabold text-white">
+                حساب السوبر أدمن السيادي — مدار للتقنية MADAAR
+              </h2>
+              <span className="px-2 py-0.5 rounded-full text-[10px] bg-amber-500/20 text-amber-300 font-mono font-bold border border-amber-500/30">
+                admin@madaar.io
+              </span>
+            </div>
+            <p className="text-xs text-slate-300 mt-1">
+              هذا الحساب خاص وحصري لمالك المنصة للتحكم بجميع السناتر، تعديل الباقات، والدخول لأي مركز فحصاً ودعماً.
+            </p>
+          </div>
+        </div>
+
+        <Link
+          href="/"
+          onClick={() => switchUserRole('owner')}
+          className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/20 transition flex items-center gap-2"
+        >
+          <span>العودة للوحة السنتر النشط</span>
+          <ExternalLink className="w-3.5 h-3.5" />
+        </Link>
+      </div>
+
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -201,11 +244,12 @@ export default function SuperAdminPage() {
               <tr>
                 <th className="px-4 py-3">السنتر التعليمي</th>
                 <th className="px-4 py-3">المعرف (Slug)</th>
+                <th className="px-4 py-3">روابط السنتر المخصصة</th>
                 <th className="px-4 py-3">الباقة الحالية</th>
-                <th className="px-4 py-3">إضافة الحسابات المالية</th>
+                <th className="px-4 py-3">الحسابات المالية</th>
                 <th className="px-4 py-3">حد الطلاب</th>
                 <th className="px-4 py-3">الحالة</th>
-                <th className="px-4 py-3 text-center">التحكم والتعطيل</th>
+                <th className="px-4 py-3 text-center">التحكم والدخول</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -217,7 +261,43 @@ export default function SuperAdminPage() {
                   </td>
 
                   <td className="px-4 py-3 font-mono font-bold text-slate-600">
-                    {c.slug}
+                    <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-xs">
+                      /{c.slug}
+                    </span>
+                  </td>
+
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-1.5 font-bold text-[11px]">
+                      <Link
+                        href={`/c/${c.slug}`}
+                        target="_blank"
+                        className="px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center gap-1"
+                        title="الصفحة العامة للسنتر"
+                      >
+                        <Building2 className="w-3 h-3" />
+                        <span>الهبوط</span>
+                      </Link>
+
+                      <Link
+                        href={`/c/${c.slug}/portal`}
+                        target="_blank"
+                        className="px-2 py-0.5 rounded bg-teal-50 hover:bg-teal-100 text-[#27877E] flex items-center gap-1"
+                        title="بوابة الطلاب"
+                      >
+                        <GraduationCap className="w-3 h-3" />
+                        <span>الطلاب</span>
+                      </Link>
+
+                      <Link
+                        href={`/c/${c.slug}/scanner`}
+                        target="_blank"
+                        className="px-2 py-0.5 rounded bg-amber-50 hover:bg-amber-100 text-[#C7A66A] flex items-center gap-1"
+                        title="سكانر الأسيستانت"
+                      >
+                        <Smartphone className="w-3 h-3" />
+                        <span>الماسح</span>
+                      </Link>
+                    </div>
                   </td>
 
                   <td className="px-4 py-3">
@@ -251,23 +331,38 @@ export default function SuperAdminPage() {
                   </td>
 
                   <td className="px-4 py-3 text-center">
-                    {c.subscription_status === 'active' ? (
+                    <div className="flex items-center justify-center gap-1.5">
                       <button
-                        onClick={() => updateCenterTier(c.id, c.subscription_tier, 'suspended')}
-                        className="px-2.5 py-1 rounded bg-red-50 hover:bg-red-100 text-red-700 font-bold text-[11px] transition"
-                        title="إيقاف حساب السنتر مؤقتاً"
+                        onClick={() => {
+                          switchCenter(c.id);
+                          switchUserRole('owner');
+                          router.push('/');
+                        }}
+                        className="px-2.5 py-1 rounded bg-[#111D2D] hover:bg-[#1E2A3D] text-[#C7A66A] font-bold text-[11px] transition flex items-center gap-1"
+                        title="الدخول للوحة التحكم لهذا السنتر"
                       >
-                        إيقاف مؤقت
+                        <LogIn className="w-3 h-3" />
+                        <span>دخول كمدير</span>
                       </button>
-                    ) : (
-                      <button
-                        onClick={() => updateCenterTier(c.id, c.subscription_tier, 'active')}
-                        className="px-2.5 py-1 rounded bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-[11px] transition"
-                        title="تفعيل حساب السنتر"
-                      >
-                        تفعيل الحساب
-                      </button>
-                    )}
+
+                      {c.subscription_status === 'active' ? (
+                        <button
+                          onClick={() => updateCenterTier(c.id, c.subscription_tier, 'suspended')}
+                          className="px-2 py-1 rounded bg-red-50 hover:bg-red-100 text-red-700 font-bold text-[11px] transition"
+                          title="إيقاف حساب السنتر مؤقتاً"
+                        >
+                          إيقاف
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => updateCenterTier(c.id, c.subscription_tier, 'active')}
+                          className="px-2 py-1 rounded bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-[11px] transition"
+                          title="تفعيل حساب السنتر"
+                        >
+                          تفعيل
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}

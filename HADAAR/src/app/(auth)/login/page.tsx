@@ -268,8 +268,22 @@ export default function LoginPage() {
             </form>
           )}
 
+          {/* Register New Center Banner */}
+          <div className="mt-6 pt-5 border-t border-slate-200 text-center">
+            <p className="text-xs text-slate-600 mb-2 font-medium">
+              تريد تشغيل منظومة حَضَر في سنترك أو مركزك التعليمي؟
+            </p>
+            <Link
+              href="/register"
+              className="inline-flex items-center justify-center gap-1.5 w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#111D2D] to-[#1E2A3D] text-[#C7A66A] font-bold text-xs hover:border-[#C7A66A] border border-transparent shadow-sm transition"
+            >
+              <Building2 className="w-4 h-4 text-[#C7A66A]" />
+              <span>تسجيل سنتر جديد (تجربة مجانية 14 يوماً)</span>
+            </Link>
+          </div>
+
           {/* Quick Demo Access Bar */}
-          <div className="mt-8 pt-6 border-t border-slate-200">
+          <div className="mt-6 pt-5 border-t border-slate-200">
             <p className="text-[11px] font-bold text-slate-400 mb-3 text-center flex items-center justify-center gap-1">
               <Sparkles className="w-3.5 h-3.5 text-[#C7A66A]" />
               تجربة سريعة بنقرة واحدة (One-Click Demo Access):
