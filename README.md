@@ -56,6 +56,6 @@ Security is built into our core. Our applications utilize robust **Row Level Sec
   <b>One Vision. Multiple Solutions. Unlimited Possibilities.</b>
   <br><br>
   <i>Building intelligent solutions for a connected world.</i>
-  <br>
-  <a href="mailto:hello@madaar.tech">Contact Us</a>
+  <br><br>
+  <a href="https://wa.me/201202074649?text=Hello%20MADAAR%20Technologies" target="_blank">💬 <b>Direct Developer WhatsApp: +20 120 207 4649</b></a>
 </div>

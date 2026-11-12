@@ -1,9 +1,10 @@
 'use client';
 
 // ====================================================================
-// HADAR SaaS Platform — Unified Authentication & Role Login
+// HADAR SaaS Platform — Unified Authentication
 // Developed by MADAAR Technologies
 // Colors: Midnight Navy (#111D2D), Champagne Gold (#C7A66A), Deep Teal (#27877E)
+// Developer WhatsApp: +201202074649
 // ====================================================================
 
 import React, { useState } from 'react';
@@ -11,17 +12,20 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   GraduationCap,
-  ShieldCheck,
   Building2,
   Users,
   Lock,
   Mail,
   Phone,
   ArrowRight,
-  CheckCircle2,
   Sparkles,
-  QrCode,
-  LogIn
+  Smartphone,
+  LogIn,
+  ChevronDown,
+  ChevronUp,
+  MessageCircle,
+  ExternalLink,
+  ShieldAlert
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/context';
 import { useData } from '@/lib/store/data-context';
@@ -29,48 +33,45 @@ import { useData } from '@/lib/store/data-context';
 export default function LoginPage() {
   const router = useRouter();
   const { t, isRtl } = useI18n();
-  const { loginUser, loginStudent, currentCenter, switchUserRole } = useData();
+  const { loginUser, loginStudent, currentCenter } = useData();
 
-  // Login Mode: 'staff' (Center Owner/Assistant), 'super_admin' (Platform Owner), 'student' (Student/Parent)
-  const [accountType, setAccountType] = useState<'staff' | 'super_admin' | 'student'>('staff');
+  // Roles visible to public / clients:
+  // 1. 'owner' (مدير السنتر)
+  // 2. 'assistant' (المساعد / الأسيستانت)
+  // 3. 'student' (بوابة الطالب وولي الأمر)
+  const [accountType, setAccountType] = useState<'owner' | 'assistant' | 'student'>('owner');
 
-  // Staff Form
+  // Form Fields
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
-  // Student Form
   const [studentIdentifier, setStudentIdentifier] = useState('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Handle Staff / Admin Submit
+  // Demo Modal / Collapsible State
+  const [showDemoModal, setShowDemoModal] = useState(false);
+
+  // Developer WhatsApp
+  const developerWhatsappNumber = '201202074649';
+  const whatsappUrl = `https://wa.me/${developerWhatsappNumber}?text=${encodeURIComponent(
+    'مرحباً، أود التواصل بخصوص منصة حَضَر (HADAR) من مدار للتقنية.'
+  )}`;
+
+  // Handle Center Owner & Assistant Submit
   const handleStaffLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
 
-    if (accountType === 'super_admin') {
-      const cleanEmail = (email || '').trim().toLowerCase();
-      // Strict Super Admin Verification
-      if (cleanEmail !== 'admin@madaar.io') {
-        setErrorMsg('البريد الإلكتروني غير مخصص للإدارة العليا. حساب السوبر أدمن المعتمد هو admin@madaar.io');
-        return;
-      }
+    if (!password || password.length < 4) {
+      setErrorMsg('يرجى إدخال كلمة المرور الصحيحة لحسابك');
+      return;
+    }
 
-      if (password !== 'madaar2026') {
-        setErrorMsg('خطأ أمني: المفتاح الإداري للسوبر أدمن غير صحيح. محاولة الدخول مسجلة في سجل الحماية.');
-        return;
-      }
-
-      loginUser('admin@madaar.io', 'super_admin');
-      router.push('/super-admin');
-    } else {
-      // Center Staff Verification
-      if (!password || password.length < 4) {
-        setErrorMsg('يرجى إدخال كلمة المرور الخاصة بحساب السنتر');
-        return;
-      }
-
+    if (accountType === 'owner') {
       loginUser(email || 'owner@alnokhba.com', 'owner');
       router.push('/');
+    } else if (accountType === 'assistant') {
+      loginUser(email || 'assistant@alnokhba.com', 'assistant');
+      router.push('/scanner');
     }
   };
 
@@ -84,7 +85,7 @@ export default function LoginPage() {
       return;
     }
 
-    const student = loginStudent(studentIdentifier);
+    const student = loginStudent(studentIdentifier.trim());
     if (student) {
       router.push('/portal');
     } else {
@@ -92,9 +93,11 @@ export default function LoginPage() {
     }
   };
 
-  // Quick Demo Access Logins (Customer preview only - Super Admin is strictly excluded)
-  const handleQuickLogin = (role: 'owner' | 'assistant' | 'student') => {
+  // Dedicated Demo Logins (For pitching/demo preview only — strictly center/assistant/student)
+  const handleLaunchDemo = (role: 'owner' | 'assistant' | 'student') => {
     setErrorMsg(null);
+    setShowDemoModal(false);
+
     if (role === 'owner') {
       loginUser('owner@alnokhba.com', 'owner');
       router.push('/');
@@ -108,45 +111,62 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#F8F9FA] flex flex-col justify-between py-10 px-4 sm:px-6 lg:px-8 relative">
       {/* Brand Header */}
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <div className="inline-flex w-16 h-16 rounded-2xl bg-gradient-to-br from-[#C7A66A] to-[#8C6F3B] p-[2px] shadow-gold items-center justify-center mb-4">
+        <div className="inline-flex w-16 h-16 rounded-2xl bg-gradient-to-br from-[#C7A66A] to-[#8C6F3B] p-[2px] shadow-gold items-center justify-center mb-3">
           <div className="w-full h-full bg-[#111D2D] rounded-[14px] flex items-center justify-center">
             <GraduationCap className="w-8 h-8 text-[#C7A66A]" />
           </div>
         </div>
 
-        <div className="flex items-center justify-center gap-2 mb-1">
+        <div className="flex items-center justify-center gap-2 mb-0.5">
           <span className="text-3xl font-extrabold tracking-tight text-[#111D2D]">HADAR</span>
           <span className="text-2xl font-bold text-[#C7A66A]">حضر</span>
         </div>
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
-          MADAAR Technologies
+        <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">
+          MADAAR TECHNOLOGIES
         </p>
-        <p className="text-sm text-slate-600 mt-2 font-medium">
+        <p className="text-xs text-slate-600 mt-1.5 font-medium">
           حضور أذكى. إدارة أسهل.
         </p>
       </div>
 
       {/* Main Login Card */}
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-6 shadow-card rounded-2xl border border-slate-200 sm:px-10">
-          {/* Account Type Tabs */}
-          <div className="flex p-1 bg-slate-100 rounded-xl mb-6">
+      <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-8 px-6 shadow-card rounded-3xl border border-slate-200 sm:px-10">
+          {/* Exact 3 Roles: Center Admin, Assistant, Student */}
+          <div className="flex p-1 bg-slate-100 rounded-2xl mb-6">
             <button
               type="button"
               onClick={() => {
-                setAccountType('staff');
+                setAccountType('owner');
                 setErrorMsg(null);
               }}
-              className={`flex-1 py-2 text-xs font-bold rounded-lg transition ${
-                accountType === 'staff'
+              className={`flex-1 py-2 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1 ${
+                accountType === 'owner'
                   ? 'bg-[#111D2D] text-white shadow-sm'
                   : 'text-slate-600 hover:text-[#111D2D]'
               }`}
             >
-              إدارة السنتر
+              <Building2 className="w-3.5 h-3.5" />
+              <span>إدارة السنتر</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setAccountType('assistant');
+                setErrorMsg(null);
+              }}
+              className={`flex-1 py-2 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1 ${
+                accountType === 'assistant'
+                  ? 'bg-[#C7A66A] text-[#111D2D] shadow-sm'
+                  : 'text-slate-600 hover:text-[#111D2D]'
+              }`}
+            >
+              <Smartphone className="w-3.5 h-3.5" />
+              <span>الأسيستانت</span>
             </button>
 
             <button
@@ -155,28 +175,14 @@ export default function LoginPage() {
                 setAccountType('student');
                 setErrorMsg(null);
               }}
-              className={`flex-1 py-2 text-xs font-bold rounded-lg transition ${
+              className={`flex-1 py-2 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1 ${
                 accountType === 'student'
                   ? 'bg-[#27877E] text-white shadow-sm'
                   : 'text-slate-600 hover:text-[#111D2D]'
               }`}
             >
-              بوابة الطالب
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setAccountType('super_admin');
-                setErrorMsg(null);
-              }}
-              className={`flex-1 py-2 text-xs font-bold rounded-lg transition ${
-                accountType === 'super_admin'
-                  ? 'bg-amber-600 text-white shadow-sm'
-                  : 'text-slate-600 hover:text-[#111D2D]'
-              }`}
-            >
-              سوبر أدمن
+              <GraduationCap className="w-3.5 h-3.5" />
+              <span>بوابة الطالب</span>
             </button>
           </div>
 
@@ -187,12 +193,12 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* Form 1 & 2: Staff / Super Admin */}
-          {(accountType === 'staff' || accountType === 'super_admin') && (
+          {/* Form 1: Center Owner Login */}
+          {accountType === 'owner' && (
             <form onSubmit={handleStaffLogin} className="space-y-4 text-xs">
               <div>
                 <label className="block font-bold text-slate-700 mb-1">
-                  البريد الإلكتروني المسجل:
+                  البريد الإلكتروني لمدير السنتر:
                 </label>
                 <div className="relative">
                   <Mail className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
@@ -201,11 +207,7 @@ export default function LoginPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder={
-                      accountType === 'super_admin'
-                        ? 'admin@madaar.io'
-                        : 'owner@alnokhba.com'
-                    }
+                    placeholder="owner@alnokhba.com"
                     className="w-full pr-9 pl-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#C7A66A]"
                   />
                 </div>
@@ -231,18 +233,59 @@ export default function LoginPage() {
               <div className="pt-2">
                 <button
                   type="submit"
-                  className={`w-full py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-md transition ${
-                    accountType === 'super_admin'
-                      ? 'bg-amber-600 hover:bg-amber-700 text-white'
-                      : 'bg-[#C7A66A] hover:bg-[#B08E4F] text-[#111D2D]'
-                  }`}
+                  className="w-full py-2.5 rounded-xl bg-[#111D2D] hover:bg-[#1E2A3D] text-[#C7A66A] font-bold text-xs flex items-center justify-center gap-2 shadow-md transition"
                 >
                   <LogIn className="w-4 h-4" />
-                  <span>
-                    {accountType === 'super_admin'
-                      ? 'تسجيل الدخول كـ سوبر أدمن (مدار)'
-                      : 'تسجيل الدخول إلى السنتر'}
-                  </span>
+                  <span>تسجيل الدخول إلى لوحة السنتر</span>
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* Form 2: Assistant / Supervisor Login */}
+          {accountType === 'assistant' && (
+            <form onSubmit={handleStaffLogin} className="space-y-4 text-xs">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">
+                  بريد أو كود الأسيستانت:
+                </label>
+                <div className="relative">
+                  <Smartphone className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="assistant@alnokhba.com أو كود المشرف"
+                    className="w-full pr-9 pl-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#C7A66A]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">
+                  كلمة المرور / الرمز السري:
+                </label>
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full pr-9 pl-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#C7A66A]"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  className="w-full py-2.5 rounded-xl bg-[#C7A66A] hover:bg-[#B08E4F] text-[#111D2D] font-bold text-xs flex items-center justify-center gap-2 shadow-gold transition"
+                >
+                  <LogIn className="w-4 h-4" />
+                  <span>دخول إلى ماسح الحضور للقاعات</span>
                 </button>
               </div>
             </form>
@@ -267,7 +310,7 @@ export default function LoginPage() {
                   />
                 </div>
                 <p className="text-[11px] text-slate-500 mt-1">
-                  يمكن لولي الأمر أو الطالب المتابعة بكود الطالب المسجل على الكارنيه.
+                  المتابعة برقم الهاتف المسجل أو كود الطالب المطبوع على الكارنيه.
                 </p>
               </div>
 
@@ -290,49 +333,102 @@ export default function LoginPage() {
             </p>
             <Link
               href="/register"
-              className="inline-flex items-center justify-center gap-1.5 w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#111D2D] to-[#1E2A3D] text-[#C7A66A] font-bold text-xs hover:border-[#C7A66A] border border-transparent shadow-sm transition"
+              className="inline-flex items-center justify-center gap-1.5 w-full py-2.5 px-4 rounded-xl bg-[#111D2D] hover:bg-[#1E2A3D] text-[#C7A66A] font-bold text-xs shadow-sm transition"
             >
               <Building2 className="w-4 h-4 text-[#C7A66A]" />
               <span>تسجيل سنتر جديد (تجربة مجانية 14 يوماً)</span>
             </Link>
           </div>
 
-          {/* Quick Demo Access Bar (Centers & Students only — Super Admin is protected) */}
-          <div className="mt-6 pt-5 border-t border-slate-200">
-            <p className="text-[11px] font-bold text-slate-400 mb-2.5 text-center flex items-center justify-center gap-1">
-              <Sparkles className="w-3.5 h-3.5 text-[#C7A66A]" />
-              تجربة سريعة للعرض والعملاء (Demo Access):
-            </p>
+          {/* Dedicated Clean Demo Button (Organized, only toggles on demand) */}
+          <div className="mt-4 pt-4 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={() => setShowDemoModal(!showDemoModal)}
+              className="w-full py-2 px-3 rounded-xl border border-amber-300/80 bg-amber-50/60 hover:bg-amber-100/70 text-amber-900 text-xs font-bold transition flex items-center justify-between"
+            >
+              <span className="flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-[#C7A66A]" />
+                <span>تجربة نسخة العرض (Live Demo Preview)</span>
+              </span>
+              {showDemoModal ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </button>
 
-            <div className="grid grid-cols-3 gap-2 text-[11px]">
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('owner')}
-                className="p-2 rounded-xl bg-[#C7A66A]/15 hover:bg-[#C7A66A]/25 text-[#111D2D] border border-[#C7A66A]/30 font-bold text-center transition"
-              >
-                🏢 مدير السنتر
-              </button>
+            {/* Collapsed Clean Demo Options */}
+            {showDemoModal && (
+              <div className="mt-3 p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-2 animate-fadeIn text-xs">
+                <p className="text-[11px] text-slate-500 mb-2 font-medium text-center">
+                  اختر الحساب الذي تريد معاينته بنقرة واحدة للعرض:
+                </p>
 
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('assistant')}
-                className="p-2 rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-900 border border-teal-200 font-bold text-center transition"
-              >
-                📱 أسيستانت (QR)
-              </button>
+                <button
+                  type="button"
+                  onClick={() => handleLaunchDemo('owner')}
+                  className="w-full p-2.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 font-bold text-slate-800 text-right flex items-center justify-between transition"
+                >
+                  <span className="flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-[#111D2D]" />
+                    <span>🏢 معاينة لوحة مدير السنتر</span>
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-normal">دخول فوري</span>
+                </button>
 
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('student')}
-                className="p-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 font-bold text-center transition"
-              >
-                🎓 طالب (عمر)
-              </button>
-            </div>
+                <button
+                  type="button"
+                  onClick={() => handleLaunchDemo('assistant')}
+                  className="w-full p-2.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 font-bold text-slate-800 text-right flex items-center justify-between transition"
+                >
+                  <span className="flex items-center gap-2">
+                    <Smartphone className="w-4 h-4 text-[#C7A66A]" />
+                    <span>📱 معاينة ماسح الأسيستانت (QR)</span>
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-normal">دخول فوري</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleLaunchDemo('student')}
+                  className="w-full p-2.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 font-bold text-slate-800 text-right flex items-center justify-between transition"
+                >
+                  <span className="flex items-center gap-2">
+                    <GraduationCap className="w-4 h-4 text-[#27877E]" />
+                    <span>🎓 معاينة بوابة الطالب (عمر)</span>
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-normal">دخول فوري</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Dedicated WhatsApp Developer Contact Button */}
+        <div className="mt-4">
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-800 hover:from-emerald-700 hover:to-teal-900 text-white font-bold text-xs shadow-lg transition flex items-center justify-center gap-2 group"
+          >
+            <MessageCircle className="w-4 h-4 text-emerald-200 group-hover:scale-110 transition" />
+            <span>تواصل مباشرة مع المطور عبر واتساب: 01202074649</span>
+            <ExternalLink className="w-3.5 h-3.5 text-emerald-200 opacity-80" />
+          </a>
+        </div>
       </div>
+
+      {/* Footer with Discreet Sovereign Admin Link */}
+      <footer className="mt-8 text-center text-xs text-slate-400 space-y-1">
+        <p>منظومة حَضَر الذكية &copy; 2026 — تطوير مدار للتقنية MADAAR Technologies</p>
+        <div>
+          <Link
+            href="/super-admin"
+            className="text-[10px] text-slate-400 hover:text-slate-600 inline-flex items-center gap-1 opacity-60 hover:opacity-100 transition"
+          >
+            <Lock className="w-3 h-3" />
+            <span>بوابة الإدارة السيادية لشركة مدار (Master Admin)</span>
+          </Link>
+        </div>
+      </footer>
     </div>
   );
 }
-

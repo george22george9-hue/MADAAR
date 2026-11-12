@@ -18,7 +18,8 @@ import {
   UserCheck,
   CheckCircle2,
   Shield,
-  LogOut
+  LogOut,
+  MessageCircle
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/context';
 import { useData } from '@/lib/store/data-context';
@@ -122,7 +123,7 @@ export function Topbar() {
           )}
         </div>
 
-        {/* Role Switcher Pill (Dev / Testing / RBAC Preview) */}
+        {/* Role Switcher Pill (Center Staff) */}
         <div className="relative">
           <button
             onClick={() => setShowRoleMenu(!showRoleMenu)}
@@ -138,11 +139,11 @@ export function Topbar() {
               <div className="px-3 py-1 text-[11px] text-slate-400 font-semibold border-b border-slate-100">
                 تبديل صلاحية المستخدم:
               </div>
-              {(['owner', 'assistant', 'super_admin'] as UserRole[]).map((r) => (
+              {(currentRole === 'super_admin' ? ['owner', 'assistant', 'super_admin'] : ['owner', 'assistant']).map((r) => (
                 <button
                   key={r}
                   onClick={() => {
-                    switchUserRole(r);
+                    switchUserRole(r as UserRole);
                     setShowRoleMenu(false);
                   }}
                   className={`w-full text-right px-3 py-1.5 text-xs hover:bg-slate-50 ${
@@ -159,6 +160,17 @@ export function Topbar() {
 
       {/* Right Actions */}
       <div className="flex items-center gap-3">
+        {/* Developer WhatsApp Contact Button */}
+        <a
+          href="https://wa.me/201202074649?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%D8%8C%20%D8%A3%D9%88%D8%AF%20%D8%A7%D9%84%D8%AA%D9%88%D8%A7%D8%B5%D9%84%20%D9%85%D8%B9%20%D9%85%D8%B7%D9%88%D8%B1%20%D9%85%D9%86%D8%B8%D9%88%D9%85%D8%A9%20%D8%AD%D9%8E%D8%B6%D9%8E%D8%B1"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold transition"
+          title="تواصل مع المطور عبر واتساب (01202074649)"
+        >
+          <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+          <span>تواصل مع المطور</span>
+        </a>
         {/* Offline / Online Network Indicator */}
         <div className="flex items-center gap-2">
           {isOnline ? (
