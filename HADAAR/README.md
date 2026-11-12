@@ -1,131 +1,101 @@
-# HADAR (حضر) — Smart Attendance & Student Management SaaS Platform
-## Developed by MADAAR Technologies
-### *حضور أذكى. إدارة أسهل.*
+# HADAR (حضر) — Smart Attendance & Student Management SaaS
+### by MADAAR Technologies (مدار للتقنية)
+> **حضور أذكى. إدارة أسهل.**
 
-HADAR is an enterprise-grade multi-tenant SaaS platform built for educational centers, tutoring academies, and educational institutions across Egypt and the MENA region.
-
----
-
-## 🎨 Brand Identity & Design Direction
-
-- **Primary Colors:**
-  - **Midnight Navy:** `#111D2D` (Commanding background, deep typography, authority)
-  - **Champagne Gold:** `#C7A66A` (Brand accent, active states, premium highlights)
-  - **Warm Ivory:** `#F1EFE8` (Subtle canvas, neutral borders)
-  - **Deep Teal:** `#27877E` (Success metrics, active indicators, brand balance)
-  - **Pure White:** `#FFFFFF` (Cards, surfaces, crisp readability)
-- **Typography:** `IBM Plex Sans Arabic` for Arabic, `Plus Jakarta Sans` for English.
-- **Language & Orientation:** Arabic RTL as primary default, with instant dynamic LTR English switching.
+[![Next.js 14](https://img.shields.io/badge/Next.js-14_App_Router-black.svg)]()
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)]()
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC.svg)]()
+[![IndexedDB](https://img.shields.io/badge/Offline_Engine-Dexie.js-orange.svg)]()
+[![PostgreSQL](https://img.shields.io/badge/Database-Supabase_RLS-3ECF8E.svg)]()
+[![Multi_Tenant](https://img.shields.io/badge/Architecture-Multi--Tenant_SaaS-purple.svg)]()
 
 ---
 
-## 🚀 Key Modules & Capabilities
+## 🏛️ 1. نظرة عامة على المنظومة (System Overview)
+**حَضَر (HADAR)** هي منصة برمجية ذكية بنظام SaaS طورتها شركة **مدار للتقنية (MADAAR Technologies)** لرقمنة وإدارة المراكز والسناتر التعليمية الكبرى والمدرسين.
 
-1. **Multi-Tenant SaaS Workspace:**
-   - Independent center workspaces with complete data isolation.
-   - Built-in tenant switcher and role switcher (`owner`, `assistant`, `super_admin`).
-
-2. **Executive Dashboard (`/`):**
-   - Real-time KPIs calculated dynamically: Registered students, Active students, Today's attendance, Absences, Late arrivals, Upcoming sessions, Outstanding balance.
-   - Weekly attendance area chart & group comparison bars (Recharts).
-   - Live stream of recent attendance scans.
-   - Consecutive absence alerts with one-click parent WhatsApp messaging.
-
-3. **Student Management (`/students`):**
-   - Full student profiles (code, phone, parent phone, grade, stage, status, notes).
-   - Single and bulk printable smart QR ID cards (formatted for card printers / standard A4 paper).
-   - Excel Import (`.xlsx`) with automated header detection and validation.
-   - Excel Export with one click.
-
-4. **Groups & Recurring Schedules (`/groups`):**
-   - Manage subjects, teachers, monthly prices, default rooms, and recurring weekly time slots.
-   - Quick "بدء حصة الآن" button triggering instant session creation and scanner activation.
-
-5. **Sessions Management (`/sessions`):**
-   - Scheduled, open, completed, and cancelled sessions.
-   - Attendance opening and closing controls.
-   - Live attendance ratio tracking.
-
-6. **Smart QR Scanner (`/scanner`):**
-   - Mobile-first camera scanner using HTML5 QR engine.
-   - Immediate audio feedback (synthesized frequency beeps for success and error).
-   - Validation against session enrollment, active student status, and duplicate scan prevention.
-   - Success overlay: *"تمام، اتحضر بنجاح"* with student photo, name, code, time, and status badge.
-   - Check-in and Check-out separate modes.
-   - Manual attendance override with mandatory audit trail reason recording.
-
-7. **Offline Mode (PWA & IndexedDB):**
-   - Pre-download session rosters with a single tap.
-   - 100% offline QR scanning with local IndexedDB validation via Dexie.js.
-   - Local conflict prevention (cannot check-in twice even offline).
-   - Auto-sync on network reconnect and manual "Sync Now" button with status badge.
-
-8. **Attendance History & Audit Trail (`/history`):**
-   - Searchable and filterable by student, group, status, and date.
-   - Dedicated Administrative Audit Trail tab recording every manual override, modifier user, previous status, new status, timestamp, and justification.
-
-9. **Subscriptions & Payments (`/subscriptions` & `/payments`):**
-   - Student billing cycles, amounts, discounts, paid amount, and remaining balances.
-   - Multi-channel payments (Cash, InstaPay, Vodafone Cash, Credit Cards).
-   - Automated electronic receipt generation with print preview.
-
-10. **Reports & Analytics (`/reports`):**
-    - Group attendance comparison, student commitment rates, and financial revenue summaries.
-    - Export to Excel (`.xlsx`) and printable PDF reports.
-
-11. **Notifications Center (`/notifications`):**
-    - Automated alerts for repeated absences and overdue balances.
-    - One-click parent notification via WhatsApp.
-
-12. **Super Admin SaaS Portal (`/super-admin`):**
-    - Platform-wide MRR (Monthly Recurring Revenue) calculations.
-    - Center management (Add, activate, suspend).
-    - Configurable subscription plans (`STARTER`, `GROWTH`, `ENTERPRISE`) and add-on pricing (+100 EGP).
+### الأهداف الأساسية للمنظومة:
+1. **تسجيل الحضور بالـ QR فائق السرعة:** مسح كارت الطالب عبر كاميرا الموبايل أو قارئ الباركود مع منع التكرار اللحظي وأصوات تأكيد وتنبيه.
+2. **العمل دون اتصال بالإنترنت (Offline-First Architecture):** تسجيل الحضور داخل القاعات بدون إنترنت والتخزين في المتصفح عبر `IndexedDB (Dexie.js)` والمزامنة التلقائية فور عودة الاتصال.
+3. **عزل بيانات السناتر (Multi-Tenancy):** كل مركز تعليمي له مساحة عمل مستقلة تماماً برابط خاص به (`/c/[slug]/portal` للطلاب و `/c/[slug]/scanner` للمساعدين).
+4. **الإدارة المالية والاشتراكات:** متابعة الدفعات النقدية، المصاريف الشهرية، توليد إيصالات الدفع الرقمية وطباعتها، وسجل الخزينة.
+5. **التقارير التحليلية المتقدمة:** رسوم بيانية تفاعلية لنسب الحضور، تنبيهات الغياب المتكرر، وتصدير التقارير بصيغة Excel و PDF.
+6. **بوابة الطالب وولي الأمر:** متابعة كارت الـ QR الشخصي، سجل الحضور، جدول المواعيد، والرسوم المستحقة.
+7. **لوحة التحكم السيادية (Super Admin):** خاصة بمالكي مدار للتقنية لإدارة السناتر، تفعيل وإيقاف الاشتراكات، ومراقبة الإيراد الشهري للمنصة (MRR).
 
 ---
 
-## 🛠️ Technology Stack
-
-- **Framework:** Next.js 14 (App Router) + TypeScript
-- **Styling:** Tailwind CSS with custom MADAAR color tokens & RTL support
-- **State & Tenant Management:** React Context with persistent local simulation
-- **Offline Storage:** IndexedDB via Dexie.js
-- **QR Engine:** `qrcode` & `html5-qrcode`
-- **Data Analytics:** Recharts
-- **Excel Processing:** SheetJS (`xlsx`)
-- **Database Migrations:** PostgreSQL / Supabase with Row Level Security (RLS)
+## 🎨 2. الهوية البصرية (Brand Identity)
+* **Midnight Navy:** `#111D2D` — لون الثقة والرسوخ المؤسسي.
+* **Champagne Gold:** `#C7A66A` — لون الفخامة والتميز.
+* **Deep Teal:** `#27877E` — لون الأمان والتقنية الذكية.
+* **Warm Ivory:** `#F1EFE8` — خلفيات مريحة للعين.
+* **الخطوط:** IBM Plex Sans Arabic للغة العربية، و Plus Jakarta Sans للغة الإنجليزية.
 
 ---
 
-## 📦 Getting Started
+## 🔒 3. نموذج الأمان والصلاحيات (Security & RBAC)
+* **سوبر أدمن (Super Admin - admin@madaar.io):** محمي بمفتاح إداري سيادي (`Master Administrative Key`) ورمز وصول حصري مع حظر كامل لأي وصول غير مصرح به (403 Forbidden).
+* **مدير السنتر (Center Owner):** إدارة الطلاب، المجموعات، الحصص، التقارير، والماليات الخاصة بسنتره فقط.
+* **الأسيستانت / المساعد (Assistant):** تشغيل ماسح الـ QR وتسجيل حضور وانصراف القاعة مع حجب البيانات المالية الحساسة.
+* **الطالب / ولي الأمر (Student/Guardian):** الوصول فقط لبوابة متابعة الطالب برقم الهاتف أو كود الطالب المطبوع على الكارنيه.
 
-### 1. Run Development Server
+---
+
+## 📱 4. الروابط المخصصة لكل سنتر (Center-Scoped Dynamic Routing)
+* `http://localhost:3000/register`: تسجيل سنتر جديد وحجز المعرف الفريد (Slug) وبدء تجربة مجانية 14 يوماً.
+* `http://localhost:3000/c/[slug]`: صفحة الهبوط الرقمية المعتمدة للمركز التعليمي.
+* `http://localhost:3000/c/[slug]/portal`: بوابة الطالب وولي الأمر الخاصة بالسنتر فقط.
+* `http://localhost:3000/c/[slug]/scanner`: ماسح الـ QR السريع الخاص بمساعدي هذا السنتر.
+
+---
+
+## 📂 5. هيكل المشروع (Project Directory Tree)
+```text
+HADAAR/
+├── src/
+│   ├── app/
+│   │   ├── (auth)/
+│   │   │   ├── login/page.tsx          # تسجيل دخول متعدد الأدوار ومحمي
+│   │   │   └── register/page.tsx       # تسجيل سنتر جديد واختيار باقة
+│   │   ├── (dashboard)/
+│   │   │   ├── page.tsx               # لوحة تحكم السنتر وويدجت المشاركة
+│   │   │   ├── scanner/page.tsx       # ماسح الـ QR الذكي
+│   │   │   ├── students/page.tsx      # إدارة الطلاب وطباعة كروت QR
+│   │   │   ├── groups/page.tsx        # إدارة المجموعات والمواعيد
+│   │   │   ├── sessions/page.tsx      # جدولة الحصص وفتح الحضور
+│   │   │   ├── history/page.tsx       # سجل الحضور وسجل التدقيق (Audit)
+│   │   │   ├── subscriptions/page.tsx # اشتراكات الطلاب
+│   │   │   ├── payments/page.tsx      # المدفوعات وإيصالات الخزينة
+│   │   │   ├── reports/page.tsx       # تقارير تفاعلية وتصدير Excel/PDF
+│   │   │   ├── notifications/page.tsx # إشعارات وتنبيهات الغياب
+│   │   │   ├── settings/page.tsx      # إعدادات السنتر وروابط المشاركة
+│   │   │   └── super-admin/page.tsx   # لوحة السوبر أدمن السيادية المحمية
+│   │   └── c/[slug]/
+│   │       ├── page.tsx               # صفحة السنتر العامة
+│   │       ├── portal/page.tsx        # بوابة الطالب المستقلة
+│   │       └── scanner/page.tsx       # ماسح الأسيستانت المستقل
+│   ├── components/layout/             # مكونات الـ Sidebar والـ Topbar
+│   ├── lib/
+│   │   ├── offline/db.ts              # محرك التخزين المحلي IndexedDB (Dexie)
+│   │   ├── offline/sync-service.ts    # خوارزميات المزامنة ومنع التكرار
+│   │   └── store/data-context.tsx     # طبقة البيانات الموحدة Multi-Tenant Store
+│   └── types/database.ts              # مخططات TypeScript المطابقة لقاعدة البيانات
+└── supabase/migrations/               # سكريبتات SQL وسياسات الأمان RLS
+```
+
+---
+
+## 🚀 6. التشغيل السريع (Local Development)
 ```bash
+# تثبيت الحزم
+npm install
+
+# تشغيل بيئة التطوير
 npm run dev
 ```
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-### 2. Build for Production
-```bash
-npm run build
-npm run start
-```
-
-### 3. Database Setup (Supabase)
-Apply migrations located in `supabase/migrations/`:
-1. `001_initial_schema.sql`
-2. `002_rls_policies.sql`
-3. Optional demo data: `supabase/seed.sql`
-
-Set environment variables in `.env.local` (refer to `.env.example`):
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-```
-*(Note: HADAR is equipped with a high-fidelity data layer that functions seamlessly out of the box even before remote credentials are provided).*
+افتح المتصفح على [http://localhost:3000](http://localhost:3000).
 
 ---
 
-© 2026 MADAAR Technologies. All rights reserved.
-
+© 2026 **MADAAR Technologies**. All rights reserved.

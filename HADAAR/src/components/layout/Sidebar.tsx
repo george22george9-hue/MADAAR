@@ -134,7 +134,7 @@ export function Sidebar() {
           );
         })}
 
-        {/* Special Portals (Super Admin & Student Portal) */}
+        {/* Special Portals (Student Portal & Super Admin strictly if authorized) */}
         <div className="pt-3 mt-3 border-t border-[#1E2A3D] space-y-1">
           <Link
             href="/portal"
@@ -144,17 +144,20 @@ export function Sidebar() {
             <span>بوابة الطالب وولي الأمر</span>
           </Link>
 
-          <Link
-            href={superAdminItem.href}
-            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold transition ${
-              pathname === superAdminItem.href
-                ? 'bg-amber-600 text-white font-bold'
-                : 'text-amber-300/80 hover:bg-amber-950/40 hover:text-amber-200'
-            }`}
-          >
-            <ShieldAlert className="w-4 h-4 text-amber-400" />
-            <span>{superAdminItem.label}</span>
-          </Link>
+          {/* Super Admin is STRICTLY HIDDEN from clients and normal centers */}
+          {currentRole === 'super_admin' && (
+            <Link
+              href={superAdminItem.href}
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold transition ${
+                pathname === superAdminItem.href
+                  ? 'bg-amber-600 text-white font-bold'
+                  : 'text-amber-300/80 hover:bg-amber-950/40 hover:text-amber-200'
+              }`}
+            >
+              <ShieldAlert className="w-4 h-4 text-amber-400" />
+              <span>{superAdminItem.label}</span>
+            </Link>
+          )}
         </div>
       </nav>
 

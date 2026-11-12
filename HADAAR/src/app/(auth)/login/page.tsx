@@ -48,9 +48,27 @@ export default function LoginPage() {
     setErrorMsg(null);
 
     if (accountType === 'super_admin') {
-      loginUser(email || 'admin@madaar.io', 'super_admin');
+      const cleanEmail = (email || '').trim().toLowerCase();
+      // Strict Super Admin Verification
+      if (cleanEmail !== 'admin@madaar.io') {
+        setErrorMsg('البريد الإلكتروني غير مخصص للإدارة العليا. حساب السوبر أدمن المعتمد هو admin@madaar.io');
+        return;
+      }
+
+      if (password !== 'madaar2026') {
+        setErrorMsg('خطأ أمني: المفتاح الإداري للسوبر أدمن غير صحيح. محاولة الدخول مسجلة في سجل الحماية.');
+        return;
+      }
+
+      loginUser('admin@madaar.io', 'super_admin');
       router.push('/super-admin');
     } else {
+      // Center Staff Verification
+      if (!password || password.length < 4) {
+        setErrorMsg('يرجى إدخال كلمة المرور الخاصة بحساب السنتر');
+        return;
+      }
+
       loginUser(email || 'owner@alnokhba.com', 'owner');
       router.push('/');
     }
@@ -74,13 +92,10 @@ export default function LoginPage() {
     }
   };
 
-  // Quick Demo Access Logins
-  const handleQuickLogin = (role: 'super_admin' | 'owner' | 'assistant' | 'student') => {
+  // Quick Demo Access Logins (Customer preview only - Super Admin is strictly excluded)
+  const handleQuickLogin = (role: 'owner' | 'assistant' | 'student') => {
     setErrorMsg(null);
-    if (role === 'super_admin') {
-      loginUser('admin@madaar.io', 'super_admin');
-      router.push('/super-admin');
-    } else if (role === 'owner') {
+    if (role === 'owner') {
       loginUser('owner@alnokhba.com', 'owner');
       router.push('/');
     } else if (role === 'assistant') {
@@ -282,44 +297,36 @@ export default function LoginPage() {
             </Link>
           </div>
 
-          {/* Quick Demo Access Bar */}
+          {/* Quick Demo Access Bar (Centers & Students only — Super Admin is protected) */}
           <div className="mt-6 pt-5 border-t border-slate-200">
-            <p className="text-[11px] font-bold text-slate-400 mb-3 text-center flex items-center justify-center gap-1">
+            <p className="text-[11px] font-bold text-slate-400 mb-2.5 text-center flex items-center justify-center gap-1">
               <Sparkles className="w-3.5 h-3.5 text-[#C7A66A]" />
-              تجربة سريعة بنقرة واحدة (One-Click Demo Access):
+              تجربة سريعة للعرض والعملاء (Demo Access):
             </p>
 
-            <div className="grid grid-cols-2 gap-2 text-[11px]">
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('super_admin')}
-                className="p-2 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 font-bold text-right transition"
-              >
-                👑 سوبر أدمن المنصة
-              </button>
-
+            <div className="grid grid-cols-3 gap-2 text-[11px]">
               <button
                 type="button"
                 onClick={() => handleQuickLogin('owner')}
-                className="p-2 rounded-lg bg-[#C7A66A]/15 hover:bg-[#C7A66A]/25 text-[#111D2D] border border-[#C7A66A]/30 font-bold text-right transition"
+                className="p-2 rounded-xl bg-[#C7A66A]/15 hover:bg-[#C7A66A]/25 text-[#111D2D] border border-[#C7A66A]/30 font-bold text-center transition"
               >
-                🏢 مدير سنتر النخبة
+                🏢 مدير السنتر
               </button>
 
               <button
                 type="button"
                 onClick={() => handleQuickLogin('assistant')}
-                className="p-2 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-900 border border-teal-200 font-bold text-right transition"
+                className="p-2 rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-900 border border-teal-200 font-bold text-center transition"
               >
-                📱 مساعد الحضور (QR)
+                📱 أسيستانت (QR)
               </button>
 
               <button
                 type="button"
                 onClick={() => handleQuickLogin('student')}
-                className="p-2 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 font-bold text-right transition"
+                className="p-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 font-bold text-center transition"
               >
-                🎓 بوابة الطالب (عمر)
+                🎓 طالب (عمر)
               </button>
             </div>
           </div>

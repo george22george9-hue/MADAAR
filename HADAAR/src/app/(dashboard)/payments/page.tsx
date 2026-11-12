@@ -18,7 +18,8 @@ import {
   Smartphone,
   Building2,
   Calendar,
-  X
+  X,
+  AlertCircle
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/context';
 import { useData } from '@/lib/store/data-context';
@@ -26,7 +27,7 @@ import { Payment } from '@/types/database';
 
 export default function PaymentsPage() {
   const { t } = useI18n();
-  const { payments, students, currentCenter } = useData();
+  const { payments, students, currentCenter, currentRole } = useData();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMethod, setSelectedMethod] = useState<string>('ALL');
@@ -57,6 +58,27 @@ export default function PaymentsPage() {
         return matchesSearch && matchesMethod;
       });
   }, [payments, students, searchQuery, selectedMethod]);
+
+  // Assistant Financial Privacy Shield
+  if (currentRole === 'assistant') {
+    return (
+      <div className="bg-white rounded-2xl p-8 border border-slate-200 text-center space-y-4 max-w-lg mx-auto mt-12 shadow-sm">
+        <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto">
+          <AlertCircle className="w-8 h-8" />
+        </div>
+        <h2 className="text-lg font-bold text-[#111D2D]">صلاحيات مالية غير كافية</h2>
+        <p className="text-xs text-slate-500 leading-relaxed">
+          حسابك الحالي مسجل كـ (مساعد / أسيستانت). وفقاً لسياسات الأمان في منظومة حَضَر، يُحظر على المساعدين الوصول إلى السجلات والحسابات المالية للسنتر.
+        </p>
+        <Link
+          href="/scanner"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#27877E] text-white font-bold text-xs hover:bg-[#1E7068] transition shadow-md"
+        >
+          <span>الذهاب إلى ماسح الحضور (QR)</span>
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

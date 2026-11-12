@@ -45,8 +45,30 @@ export default function SuperAdminPage() {
     updateCenterTier,
     updatePlan,
     switchCenter,
-    switchUserRole
+    switchUserRole,
+    currentRole,
+    currentUser,
+    loginUser
   } = useData();
+
+  // Master Security Gate State
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [masterKeyInput, setMasterKeyInput] = useState('');
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  // Strict Super Admin Verification
+  const isSuperAdminAuthorized = isUnlocked || (currentRole === 'super_admin' && currentUser?.email === 'admin@madaar.io');
+
+  const handleUnlockGate = (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError(null);
+    if (masterKeyInput.trim() === 'madaar2026') {
+      setIsUnlocked(true);
+      loginUser('admin@madaar.io', 'super_admin');
+    } else {
+      setAuthError('المفتاح السيادي غير صحيح! تم رفض الوصول وتسجيل المحاولة في سجل الحماية.');
+    }
+  };
 
   const [showAddCenterModal, setShowAddCenterModal] = useState(false);
   const [editingPlan, setEditingPlan] = useState<SubscriptionPlan | null>(null);
@@ -138,6 +160,79 @@ export default function SuperAdminPage() {
 
     setEditingPlan(null);
   };
+
+  // Master Access Security Gate Check
+  if (!isSuperAdminAuthorized) {
+    return (
+      <div className="min-h-[75vh] flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-[#111D2D] border-2 border-red-500/30 rounded-3xl p-8 text-white shadow-2xl text-center space-y-6 relative overflow-hidden">
+          <div className="absolute -top-24 -right-24 w-48 h-48 bg-red-600/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-[#C7A66A]/10 rounded-full blur-3xl pointer-events-none" />
+
+          {/* Security Badge */}
+          <div className="inline-flex w-16 h-16 rounded-2xl bg-gradient-to-br from-red-600 to-amber-600 p-[2px] shadow-lg items-center justify-center">
+            <div className="w-full h-full bg-[#111D2D] rounded-[14px] flex items-center justify-center">
+              <Lock className="w-8 h-8 text-red-500 animate-pulse" />
+            </div>
+          </div>
+
+          <div>
+            <span className="px-3 py-1 rounded-full text-[10px] font-extrabold bg-red-500/20 text-red-400 border border-red-500/30 tracking-wider">
+              منطقة سيادية محظورة (403 — RESTRICTED ACCESS)
+            </span>
+            <h1 className="text-xl font-black tracking-tight mt-3 text-white">
+              بوابة الإدارة العليا — مدار للتقنية
+            </h1>
+            <p className="text-xs text-slate-300 mt-2 leading-relaxed">
+              هذه اللوحة خاصة بمالكي منصة حَضَر (MADAAR Technologies). الوصول إليها مقيد ومحمي بتشفير عالي ويتطلب المفتاح الإداري المعتمد.
+            </p>
+          </div>
+
+          {authError && (
+            <div className="p-3 rounded-xl bg-red-950/80 border border-red-500/50 text-red-300 text-xs font-semibold text-right flex items-center gap-2">
+              <ShieldAlert className="w-4 h-4 text-red-400 flex-shrink-0" />
+              <span>{authError}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleUnlockGate} className="space-y-4 text-right">
+            <div>
+              <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                المفتاح الإداري السيادي (Master Key):
+              </label>
+              <input
+                type="password"
+                required
+                value={masterKeyInput}
+                onChange={(e) => setMasterKeyInput(e.target.value)}
+                placeholder="أدخل مفتاح الإدارة العليا"
+                className="w-full px-4 py-2.5 rounded-xl bg-[#1A273A] border border-slate-700 text-xs font-mono text-white focus:outline-none focus:border-[#C7A66A]"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-red-600 to-amber-600 hover:opacity-95 text-white font-bold text-xs shadow-lg transition flex items-center justify-center gap-2"
+            >
+              <Lock className="w-4 h-4" />
+              <span>مصادقة المفتاح وفك القفل</span>
+            </button>
+          </form>
+
+          <div className="pt-4 border-t border-slate-800 flex items-center justify-center">
+            <Link
+              href="/"
+              onClick={() => switchUserRole('owner')}
+              className="text-xs text-slate-400 hover:text-white transition flex items-center gap-1.5"
+            >
+              <span>العودة للوحة تحكم السنتر</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
