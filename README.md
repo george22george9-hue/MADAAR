@@ -128,3 +128,4 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ---
 
 © 2026 MADAAR Technologies. All rights reserved.
+

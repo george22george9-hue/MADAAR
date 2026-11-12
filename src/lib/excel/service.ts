@@ -104,3 +104,4 @@ export async function parseStudentsExcelFile(file: File): Promise<ImportedStuden
     reader.readAsArrayBuffer(file);
   });
 }
+

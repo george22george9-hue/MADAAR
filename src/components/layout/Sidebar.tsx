@@ -134,13 +134,21 @@ export function Sidebar() {
           );
         })}
 
-        {/* Super Admin Entry */}
-        <div className="pt-3 mt-3 border-t border-[#1E2A3D]">
+        {/* Special Portals (Super Admin & Student Portal) */}
+        <div className="pt-3 mt-3 border-t border-[#1E2A3D] space-y-1">
+          <Link
+            href="/portal"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold text-teal-300/90 hover:bg-teal-950/40 hover:text-teal-200 transition"
+          >
+            <GraduationCap className="w-4 h-4 text-teal-400" />
+            <span>بوابة الطالب وولي الأمر</span>
+          </Link>
+
           <Link
             href={superAdminItem.href}
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold transition ${
               pathname === superAdminItem.href
-                ? 'bg-amber-600 text-white'
+                ? 'bg-amber-600 text-white font-bold'
                 : 'text-amber-300/80 hover:bg-amber-950/40 hover:text-amber-200'
             }`}
           >
@@ -158,3 +166,4 @@ export function Sidebar() {
     </aside>
   );
 }
+

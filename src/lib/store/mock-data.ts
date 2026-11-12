@@ -474,3 +474,4 @@ export const INITIAL_AUDIT_LOGS: AttendanceAuditLog[] = [
     timestamp: new Date(Date.now() - 1000000).toISOString()
   }
 ];
+

@@ -98,6 +98,13 @@ interface DataContextType {
   updateCenterTier: (centerId: string, tier: Center['subscription_tier'], status: Center['subscription_status']) => void;
   updatePlan: (id: string, data: Partial<SubscriptionPlan>) => void;
 
+  // Student Portal Authentication
+  currentStudent: Student | null;
+  setCurrentStudent: (student: Student | null) => void;
+  loginStudent: (identifier: string) => Student | null;
+  loginUser: (email: string, role?: UserRole) => boolean;
+  logout: () => void;
+
   // Storage reset
   resetToDefaults: () => void;
 }
@@ -112,6 +119,18 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [activeCenterId, setActiveCenterId] = useState<string>(INITIAL_CENTERS[0].id);
   const [currentUser, setCurrentUser] = useState<UserProfile>(CURRENT_USER);
   const [currentRole, setCurrentRole] = useState<UserRole>('owner');
+  const [currentStudent, setCurrentStudentState] = useState<Student | null>(INITIAL_STUDENTS[0]);
+
+  const setCurrentStudent = (st: Student | null) => {
+    setCurrentStudentState(st);
+    try {
+      if (st) {
+        localStorage.setItem(`${STORAGE_KEY_PREFIX}current_student`, JSON.stringify(st));
+      } else {
+        localStorage.removeItem(`${STORAGE_KEY_PREFIX}current_student`);
+      }
+    } catch {}
+  };
 
   const [students, setStudents] = useState<Student[]>(INITIAL_STUDENTS);
   const [groups, setGroups] = useState<Group[]>(INITIAL_GROUPS);
@@ -757,6 +776,51 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     saveKey('plans', updated);
   };
 
+  const loginStudent = (identifier: string): Student | null => {
+    const clean = identifier.trim().toLowerCase();
+    const found = students.find(
+      (s) =>
+        s.student_code.toLowerCase() === clean ||
+        s.parent_phone === clean ||
+        (s.phone && s.phone === clean) ||
+        s.qr_token.toLowerCase() === clean ||
+        s.full_name.toLowerCase().includes(clean)
+    );
+    if (found) {
+      setCurrentStudent(found);
+      return found;
+    }
+    return null;
+  };
+
+  const loginUser = (email: string, role?: UserRole): boolean => {
+    const lower = email.trim().toLowerCase();
+    if (role === 'super_admin' || lower.includes('admin') || lower.includes('madaar')) {
+      setCurrentUser(SUPER_ADMIN_USER);
+      setCurrentRole('super_admin');
+      return true;
+    } else if (role === 'assistant' || lower.includes('assistant')) {
+      setCurrentUser({
+        id: 'u0000000-0000-0000-0000-000000000003',
+        email: 'assistant@alnokhba.com',
+        full_name: 'سارة محمود (مساعد حضور)',
+        is_super_admin: false,
+        created_at: new Date().toISOString()
+      });
+      setCurrentRole('assistant');
+      return true;
+    } else {
+      setCurrentUser(CURRENT_USER);
+      setCurrentRole('owner');
+      return true;
+    }
+  };
+
+  const logout = () => {
+    setCurrentStudent(null);
+    setCurrentRole('owner');
+  };
+
   const resetToDefaults = () => {
     localStorage.clear();
     setCenters(INITIAL_CENTERS);
@@ -808,6 +872,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         addCenter,
         updateCenterTier,
         updatePlan,
+        currentStudent,
+        setCurrentStudent,
+        loginStudent,
+        loginUser,
+        logout,
         resetToDefaults
       }}
     >
@@ -823,3 +892,4 @@ export function useData() {
   }
   return context;
 }
+

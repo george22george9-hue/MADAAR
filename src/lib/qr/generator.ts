@@ -32,3 +32,4 @@ export async function generateQrDataUrl(token: string): Promise<string> {
     throw err;
   }
 }
+

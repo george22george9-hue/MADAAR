@@ -267,3 +267,4 @@ export interface OfflineAttendanceEvent {
   student_name?: string;
   student_code?: string;
 }
+

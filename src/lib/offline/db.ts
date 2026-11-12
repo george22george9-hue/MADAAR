@@ -79,3 +79,4 @@ export function getOrCreateDeviceId(): string {
   }
   return deviceId;
 }
+

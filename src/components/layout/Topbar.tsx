@@ -17,7 +17,8 @@ import {
   Bell,
   UserCheck,
   CheckCircle2,
-  Shield
+  Shield,
+  LogOut
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/context';
 import { useData } from '@/lib/store/data-context';
@@ -210,7 +211,7 @@ export function Topbar() {
           )}
         </Link>
 
-        {/* User Profile Card */}
+        {/* User Profile Card & Logout */}
         <div className="flex items-center gap-2.5 pl-2 border-l border-slate-200">
           <div className="w-8 h-8 rounded-full bg-[#111D2D] text-[#C7A66A] flex items-center justify-center font-bold text-xs shadow-sm">
             {currentUser.full_name.substring(0, 2)}
@@ -221,8 +222,16 @@ export function Topbar() {
               {currentRole === 'super_admin' ? 'Super Admin' : currentRole === 'owner' ? 'Owner' : 'Assistant'}
             </p>
           </div>
+          <Link
+            href="/login"
+            className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-red-600 hover:bg-red-50 transition"
+            title="تسجيل الخروج / تبديل الحساب"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+          </Link>
         </div>
       </div>
     </header>
   );
 }
+

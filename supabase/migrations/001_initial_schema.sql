@@ -293,3 +293,4 @@ CREATE TABLE IF NOT EXISTS public.devices (
     registered_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     UNIQUE(center_id, device_fingerprint)
 );
+
