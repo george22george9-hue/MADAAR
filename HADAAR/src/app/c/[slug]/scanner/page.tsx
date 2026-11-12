@@ -197,6 +197,7 @@ function AssistantScannerContent() {
     } catch (err: any) {
       setScanResult({
         success: false,
+        mode,
         message: err.message || 'خطأ أثناء معالجة الكود'
       });
       playSound('error');
@@ -285,7 +286,7 @@ function AssistantScannerContent() {
                   const grp = centerGroups.find((g) => g.id === s.group_id);
                   return (
                     <option key={s.id} value={s.id}>
-                      {grp?.name} ({s.date} • {s.start_time} - {s.end_time}) {s.status === 'open' ? '🟢 مفتوحة' : '⚪ مغلقة'}
+                      {grp?.name} ({s.session_date} • {s.start_time} - {s.end_time}) {s.status === 'open' ? '🟢 مفتوحة' : '⚪ مغلقة'}
                     </option>
                   );
                 })}
@@ -409,7 +410,7 @@ function AssistantScannerContent() {
                   {scanResult.student && (
                     <div className="mt-2 pt-2 border-t border-emerald-200/60 flex items-center justify-between text-xs">
                       <div>
-                        <p className="font-bold text-slate-900">{scanResult.student.name}</p>
+                        <p className="font-bold text-slate-900">{scanResult.student.full_name}</p>
                         <p className="text-[11px] text-slate-500 font-mono">
                           كود الطالب: {scanResult.student.student_code} • {scanResult.student.grade}
                         </p>
@@ -469,7 +470,7 @@ function AssistantScannerContent() {
                 return (
                   <div key={att.id} className="py-2.5 flex items-center justify-between">
                     <div>
-                      <p className="font-bold text-slate-900">{stu?.name || 'طالب مسجل'}</p>
+                      <p className="font-bold text-slate-900">{stu?.full_name || 'طالب مسجل'}</p>
                       <p className="text-[10px] text-slate-500 font-mono">
                         {stu?.student_code} • وقت التحضير: {att.check_in_time ? new Date(att.check_in_time).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '—'}
                       </p>
