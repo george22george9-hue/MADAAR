@@ -6,7 +6,7 @@
 // Colors: Midnight Navy (#111D2D), Champagne Gold (#C7A66A)
 // ====================================================================
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -22,15 +22,28 @@ import {
   Bell,
   Settings,
   ShieldAlert,
-  GraduationCap
+  GraduationCap,
+  X
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/context';
 import { useData } from '@/lib/store/data-context';
 
-export function Sidebar() {
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { t, isRtl } = useI18n();
   const { currentCenter, currentRole, unreadNotificationsCount } = useData();
+
+  // Auto-close mobile drawer whenever pathname changes
+  useEffect(() => {
+    if (isOpen && onClose) {
+      onClose();
+    }
+  }, [pathname]);
 
   // Navigation Items
   const navItems = [
@@ -67,10 +80,10 @@ export function Sidebar() {
   // Check if role is restricted from finance
   const isFinanceRestricted = currentRole === 'assistant' && !currentCenter.has_financial_addon;
 
-  return (
-    <aside className="w-64 bg-[#111D2D] text-white flex flex-col h-screen fixed top-0 bottom-0 z-30 select-none shadow-xl border-r border-[#1E2A3D]">
+  const renderNavContent = (isMobileView: boolean = false) => (
+    <>
       {/* Brand Identity Header */}
-      <div className="p-5 border-b border-[#1E2A3D] flex items-center justify-between">
+      <div className="p-4 sm:p-5 border-b border-[#1E2A3D] flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#C7A66A] to-[#8C6F3B] p-[2px] shadow-gold flex items-center justify-center">
             <div className="w-full h-full bg-[#111D2D] rounded-[10px] flex items-center justify-center">
@@ -87,6 +100,18 @@ export function Sidebar() {
             </p>
           </div>
         </div>
+
+        {/* Mobile Close Button */}
+        {isMobileView && onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#1E2A3D] transition"
+            aria-label="إغلاق القائمة"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
       </div>
 
       {/* Active Workspace / Center Banner */}
@@ -111,6 +136,9 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={() => {
+                if (isMobileView && onClose) onClose();
+              }}
               className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                 item.highlight
                   ? isActive
@@ -138,6 +166,9 @@ export function Sidebar() {
         <div className="pt-3 mt-3 border-t border-[#1E2A3D] space-y-1">
           <Link
             href="/portal"
+            onClick={() => {
+              if (isMobileView && onClose) onClose();
+            }}
             className="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold text-teal-300/90 hover:bg-teal-950/40 hover:text-teal-200 transition"
           >
             <GraduationCap className="w-4 h-4 text-teal-400" />
@@ -148,6 +179,9 @@ export function Sidebar() {
           {currentRole === 'super_admin' && (
             <Link
               href={superAdminItem.href}
+              onClick={() => {
+                if (isMobileView && onClose) onClose();
+              }}
               className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold transition ${
                 pathname === superAdminItem.href
                   ? 'bg-amber-600 text-white font-bold'
@@ -166,7 +200,39 @@ export function Sidebar() {
         <p>نظام حضر الذكي v1.0</p>
         <p className="text-slate-500">شركة مدار للحلول السحابية</p>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* 1. Desktop Fixed Sidebar */}
+      <aside className={`hidden md:flex w-64 bg-[#111D2D] text-white flex-col h-screen fixed top-0 bottom-0 z-30 select-none shadow-xl ${isRtl ? 'right-0 border-l border-[#1E2A3D]' : 'left-0 border-r border-[#1E2A3D]'}`}>
+        {renderNavContent(false)}
+      </aside>
+
+      {/* 2. Mobile Off-Canvas Drawer Backdrop */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 md:hidden transition-opacity"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* 3. Mobile Slide-Over Drawer */}
+      <aside
+        className={`fixed top-0 bottom-0 z-50 w-72 max-w-[85vw] bg-[#111D2D] text-white flex flex-col shadow-2xl transition-transform duration-300 ease-in-out md:hidden ${
+          isRtl ? 'right-0' : 'left-0'
+        } ${
+          isOpen
+            ? 'translate-x-0'
+            : isRtl
+            ? 'translate-x-full'
+            : '-translate-x-full'
+        }`}
+      >
+        {renderNavContent(true)}
+      </aside>
+    </>
   );
 }
-

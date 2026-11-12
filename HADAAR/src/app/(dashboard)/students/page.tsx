@@ -266,12 +266,12 @@ export default function StudentsPage() {
         </div>
 
         {/* Filter Dropdowns */}
-        <div className="flex items-center gap-3 w-full md:w-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 w-full md:w-auto">
           {/* Grade filter */}
           <select
             value={selectedGrade}
             onChange={(e) => setSelectedGrade(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-slate-200 text-xs bg-white text-slate-700 focus:outline-none focus:border-[#C7A66A]"
+            className="w-full px-3 py-2 rounded-lg border border-slate-200 text-xs bg-white text-slate-700 focus:outline-none focus:border-[#C7A66A]"
           >
             <option value="ALL">جميع الصفوف الدراسية</option>
             <option value="الصف الثالث الثانوي">الصف الثالث الثانوي</option>
@@ -284,7 +284,7 @@ export default function StudentsPage() {
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-slate-200 text-xs bg-white text-slate-700 focus:outline-none focus:border-[#C7A66A]"
+            className="w-full px-3 py-2 rounded-lg border border-slate-200 text-xs bg-white text-slate-700 focus:outline-none focus:border-[#C7A66A]"
           >
             <option value="ALL">جميع الحالات</option>
             <option value="active">نشط فقط</option>
@@ -296,7 +296,7 @@ export default function StudentsPage() {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as 'name' | 'code' | 'date')}
-            className="px-3 py-2 rounded-lg border border-slate-200 text-xs bg-white text-slate-700 focus:outline-none focus:border-[#C7A66A]"
+            className="w-full px-3 py-2 rounded-lg border border-slate-200 text-xs bg-white text-slate-700 focus:outline-none focus:border-[#C7A66A]"
           >
             <option value="name">ترتيب بالاسم</option>
             <option value="code">ترتيب بالكود</option>
