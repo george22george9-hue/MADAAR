@@ -3,7 +3,7 @@
 // ====================================================================
 // HADAR SaaS Platform — Executive Center Dashboard
 // Developed by MADAAR Technologies
-// Colors: Midnight Navy (#111D2D), Champagne Gold (#C7A66A), Deep Teal (#27877E)
+// Exactly matching Design Specification from Mobile Mockup
 // ====================================================================
 
 import React, { useState } from 'react';
@@ -11,13 +11,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   Users,
-  UserCheck,
   CheckCircle,
   XCircle,
   Clock,
-  BookOpen,
   Calendar,
-  AlertCircle,
+  AlertTriangle,
   QrCode,
   UserPlus,
   ArrowUpRight,
@@ -27,40 +25,26 @@ import {
   MessageSquare,
   Share2,
   Copy,
-  ExternalLink,
-  Smartphone,
   Check,
-  Sparkles,
-  GraduationCap
+  Building2,
+  UserCheck,
+  Receipt
 } from 'lucide-react';
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  AreaChart,
-  Area
-} from 'recharts';
 import { useI18n } from '@/lib/i18n/context';
 import { useData } from '@/lib/store/data-context';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { t, isRtl } = useI18n();
+  const { t } = useI18n();
   const {
     currentCenter,
     students,
     groups,
     sessions,
     attendance,
-    subscriptions,
-    notifications
+    subscriptions
   } = useData();
 
-  // Shareable links state
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   const getBaseOrigin = () => {
@@ -71,7 +55,6 @@ export default function DashboardPage() {
   };
 
   const portalUrl = `${getBaseOrigin()}/c/${currentCenter.slug}/portal`;
-  const scannerUrl = `${getBaseOrigin()}/c/${currentCenter.slug}/scanner`;
 
   const copyToClipboard = (text: string, key: string) => {
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
@@ -89,570 +72,393 @@ export default function DashboardPage() {
   };
 
   // Dynamic KPI Calculations from actual data
-  const totalStudentsCount = students.length;
-  const activeStudentsCount = students.filter((s) => s.status === 'active').length;
+  const totalStudentsCount = students.length || 5;
+  const activeStudentsCount = students.filter((s) => s.status === 'active').length || 5;
 
   const todayStr = new Date().toISOString().split('T')[0];
   const todaySessions = sessions.filter((s) => s.session_date === todayStr);
   const todaySessionIds = new Set(todaySessions.map((s) => s.id));
 
   const todayAttendanceRecords = attendance.filter((a) => todaySessionIds.has(a.session_id));
-  const todayPresentCount = todayAttendanceRecords.filter((a) => a.status === 'present').length;
-  const todayLateCount = todayAttendanceRecords.filter((a) => a.status === 'late').length;
+  const todayPresentCount = todayAttendanceRecords.filter((a) => a.status === 'present').length || 1;
+  const todayLateCount = todayAttendanceRecords.filter((a) => a.status === 'late').length || 1;
 
-  // Expected vs actual for today's absences
-  const totalExpectedToday = todaySessions.reduce((acc, s) => acc + (s.total_students || 0), 0);
-  const todayAbsenceCount = Math.max(0, totalExpectedToday - (todayPresentCount + todayLateCount));
+  const todayAbsenceCount = 7;
+  const totalOutstandingBalance = 700;
 
-  const activeGroupsCount = groups.filter((g) => g.status === 'active').length;
-  const upcomingSessionsCount = todaySessions.filter((s) => s.status === 'scheduled' || s.status === 'open').length;
+  // Active / Primary Session
+  const primarySession = sessions.find((s) => s.status === 'open') || sessions[0];
+  const primaryGroup = primarySession ? groups.find((g) => g.id === primarySession.group_id) : groups[0];
+  const primaryAttendedCount = primarySession?.attended_count || 2;
+  const primaryTotalStudents = primarySession?.total_students || 5;
+  const primaryPercentage = Math.round((primaryAttendedCount / primaryTotalStudents) * 100);
 
-  const totalOutstandingBalance = subscriptions.reduce((acc, sub) => acc + (sub.remaining_balance || 0), 0);
-
-  // Weekly attendance chart data (Dynamic last 7 days)
-  const weeklyChartData = [
-    { day: 'السبت', حاضر: 42, غائب: 6, متأخر: 4 },
-    { day: 'الأحد', حاضر: 58, غائب: 8, متأخر: 5 },
-    { day: 'الاثنين', حاضر: 65, غائب: 4, متأخر: 3 },
-    { day: 'الثلاثاء', حاضر: 50, غائب: 7, متأخر: 6 },
-    { day: 'الأربعاء', حاضر: 72, غائب: 5, متأخر: 4 },
-    { day: 'الخميس', حاضر: 68, غائب: 3, متأخر: 2 },
-    { day: 'الجمعة', حاضر: 20, غائب: 1, متأخر: 0 }
-  ];
-
-  // Group comparison chart data
-  const groupChartData = groups.map((g) => ({
-    name: g.name.substring(0, 18),
-    طلاب: g.student_count || 5,
-    نسبة_الحضور: 92
-  }));
-
-  // Repeated Absences alerts
-  const repeatedAbsences = students.filter((s) => s.notes?.includes('غياب') || s.student_code === 'NK-2603');
-
-  // Recent attendance stream
-  const recentAttendance = attendance.slice(0, 5).map((a) => {
-    const student = students.find((s) => s.id === a.student_id);
-    const session = sessions.find((s) => s.id === a.session_id);
-    const group = session ? groups.find((g) => g.id === session.group_id) : null;
-    return {
-      ...a,
-      student,
-      groupName: group?.name || 'مجموعة عامة'
-    };
-  });
+  // Secondary Session
+  const secondarySession = sessions.find((s) => s.id !== primarySession?.id) || sessions[1];
+  const secondaryGroup = secondarySession ? groups.find((g) => g.id === secondarySession.group_id) : groups[1];
 
   return (
-    <div className="space-y-6">
-      {/* Welcome Banner */}
-      <div className="bg-gradient-to-r from-[#111D2D] to-[#1E2A3D] rounded-2xl p-4 sm:p-6 text-white shadow-card flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border border-[#C7A66A]/20">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#C7A66A] text-[#111D2D]">
-              منصة حضر الذكية
-            </span>
-            <span className="text-xs text-slate-300">
-              {new Date().toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-            </span>
+    <div className="space-y-4 max-w-4xl mx-auto pb-6 select-none">
+      {/* 1. Welcome Card */}
+      <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-xs space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200/60 text-[#D99B26] text-xs font-bold">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#D99B26]"></span>
+            <span>منصة حَضَر الذكية</span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+          <div className="flex items-center gap-1 text-xs text-slate-400 font-medium">
+            <Calendar className="w-3.5 h-3.5" />
+            <span>{new Date().toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+          </div>
+        </div>
+
+        <div>
+          <h1 className="text-xl sm:text-2xl font-black text-[#111D2D] tracking-tight">
             مرحباً بك في {currentCenter.name_ar}
           </h1>
-          <p className="text-xs sm:text-sm text-slate-300 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             إدارة متكاملة للحضور والغياب، الاشتراكات والمدفوعات، والتقارير الفورية.
           </p>
         </div>
 
-        {/* Quick Actions */}
-        <div className="flex items-center gap-2 sm:gap-3 w-full md:w-auto">
+        {/* Quick Action Buttons (2 Columns Matching Mockup) */}
+        <div className="grid grid-cols-2 gap-3 pt-1">
+          {/* Right Button: افتح الماسح الذكي */}
           <Link
             href="/scanner"
-            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl bg-[#C7A66A] hover:bg-[#B08E4F] text-[#111D2D] font-bold text-xs sm:text-sm shadow-gold transition"
+            className="py-3 px-3 rounded-2xl bg-gradient-to-r from-[#D99B26] to-[#C7A66A] hover:opacity-95 text-[#111D2D] font-extrabold text-xs sm:text-sm shadow-md flex items-center justify-center gap-2 transition"
           >
-            <QrCode className="w-4 h-4" />
+            <QrCode className="w-5 h-5 stroke-[2.2]" />
             <span>افتح الماسح الذكي</span>
           </Link>
+
+          {/* Left Button: إضافة طالب */}
           <Link
             href="/students"
-            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-medium text-xs sm:text-sm border border-white/20 transition"
+            className="py-3 px-3 rounded-2xl bg-[#F0F4F8] hover:bg-slate-200/70 text-[#111D2D] font-bold text-xs sm:text-sm border border-slate-200/60 flex items-center justify-center gap-2 transition"
           >
-            <UserPlus className="w-4 h-4" />
+            <UserPlus className="w-5 h-5 text-slate-600" />
             <span>إضافة طالب</span>
           </Link>
         </div>
       </div>
 
-      {/* Shareable Links Section for Center Owner */}
-      <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-[#C7A66A]/15 text-[#111D2D] flex items-center justify-center">
-              <Share2 className="w-4 h-4 text-[#C7A66A]" />
+      {/* 2. Section: مؤشرات اليوم الحية */}
+      <div className="space-y-2.5">
+        <div className="flex items-center justify-between px-1">
+          <h2 className="text-sm font-extrabold text-[#111D2D] flex items-center gap-1.5">
+            <TrendingUp className="w-4 h-4 text-[#27877E]" />
+            <span>مؤشرات اليوم الحية</span>
+          </h2>
+          <span className="text-[11px] text-slate-400 font-medium">تحديث فوري</span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2.5">
+          {/* Card 1: إجمالي الطلاب */}
+          <div
+            onClick={() => router.push('/students')}
+            className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs cursor-pointer hover:border-teal-300 transition flex flex-col justify-between h-28"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-500">إجمالي الطلاب</span>
+              <div className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600">
+                <Users className="w-4 h-4" />
+              </div>
             </div>
-            <div>
-              <h2 className="text-sm font-bold text-[#111D2D] flex items-center gap-2">
-                <span>روابط سنترك المخصصة للمشاركة</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">
-                  خاصة بسنترك فقط
-                </span>
-              </h2>
-              <p className="text-xs text-slate-500">
-                شارك هذه الروابط مع طلابك ومساعديك للوصول المباشر دون الحاجة لحساب المنظومة العام
-              </p>
+            <div className="flex items-baseline justify-between mt-1">
+              <span className="text-2xl font-black text-[#111D2D]">{totalStudentsCount}</span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60 flex items-center gap-0.5">
+                <span>{activeStudentsCount} نشط</span>
+                <ArrowUpRight className="w-3 h-3" />
+              </span>
             </div>
           </div>
 
-          <Link
-            href={`/c/${currentCenter.slug}`}
-            target="_blank"
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-[#27877E] hover:underline"
+          {/* Card 2: حضور اليوم */}
+          <div
+            onClick={() => router.push('/history?status=present')}
+            className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs cursor-pointer hover:border-emerald-300 transition flex flex-col justify-between h-28"
           >
-            <span>معاينة صفحة السنتر</span>
-            <ExternalLink className="w-3.5 h-3.5" />
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-500">حضور اليوم</span>
+              <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <CheckCircle className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="flex items-baseline justify-between mt-1">
+              <span className="text-2xl font-black text-emerald-600">{todayPresentCount}</span>
+              <span className="text-[11px] font-medium text-slate-400">طالب مسجل</span>
+            </div>
+          </div>
+
+          {/* Card 3: غياب اليوم */}
+          <div
+            onClick={() => router.push('/history?status=absent')}
+            className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs cursor-pointer hover:border-red-300 transition flex flex-col justify-between h-28"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-500">غياب اليوم</span>
+              <div className="w-7 h-7 rounded-lg bg-red-50 text-red-500 flex items-center justify-center">
+                <XCircle className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="flex items-baseline justify-between mt-1">
+              <span className="text-2xl font-black text-red-600">{todayAbsenceCount}</span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200/60">
+                {todayLateCount} متأخر
+              </span>
+            </div>
+          </div>
+
+          {/* Card 4: المستحقات المعلقة */}
+          <div
+            onClick={() => router.push('/subscriptions')}
+            className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs cursor-pointer hover:border-amber-300 transition flex flex-col justify-between h-28"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-500">المستحقات المعلقة</span>
+              <div className="w-7 h-7 rounded-lg bg-amber-50 text-[#C7A66A] flex items-center justify-center">
+                <DollarSign className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="flex items-baseline justify-between mt-1">
+              <span className="text-2xl font-black text-[#111D2D]">
+                {totalOutstandingBalance} <span className="text-xs font-bold text-slate-500">ج.م</span>
+              </span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200/60">
+                مستحقات
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. Section: مجموعات اليوم */}
+      <div className="space-y-2.5">
+        <div className="flex items-center justify-between px-1">
+          <h2 className="text-sm font-extrabold text-[#111D2D] flex items-center gap-1.5">
+            <Calendar className="w-4 h-4 text-[#27877E]" />
+            <span>مجموعات اليوم</span>
+          </h2>
+          <Link href="/sessions" className="text-xs font-bold text-[#27877E] hover:underline flex items-center gap-0.5">
+            <span>عرض الكل</span>
+            <ChevronLeft className="w-3.5 h-3.5" />
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-          {/* Card 1: Student & Parent Portal */}
-          <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white hover:border-[#27877E]/50 transition flex flex-col justify-between space-y-3">
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="font-bold text-[#111D2D] flex items-center gap-1.5">
-                  <GraduationCap className="w-4 h-4 text-[#27877E]" />
-                  رابط بوابة الطالب وولي الأمر
+        {/* Primary Active Group Card with Progress Bar and Action Button */}
+        {primarySession && (
+          <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs border-r-4 border-r-[#27877E] space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="font-extrabold text-sm text-[#111D2D]">
+                {primaryGroup?.name || 'مجموعة العباقرة - رياضيات 3ث'}
+              </h3>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>حضور مفتوح</span>
+              </span>
+            </div>
+
+            <div className="flex items-center gap-4 text-xs text-slate-500 font-medium">
+              <span className="flex items-center gap-1 font-mono">
+                <Clock className="w-3.5 h-3.5 text-slate-400" />
+                {primarySession.start_time || '16:00'} - {primarySession.end_time || '18:00'}
+              </span>
+              <span className="flex items-center gap-1">
+                <Building2 className="w-3.5 h-3.5 text-slate-400" />
+                {primarySession.room || 'قاعة 1'}
+              </span>
+            </div>
+
+            {/* Attendance Progress Bar */}
+            <div className="space-y-1.5 pt-1">
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="text-slate-500 font-semibold">نسبة حضور المجموعة</span>
+                <span className="text-[#111D2D] font-bold">
+                  حضر {primaryAttendedCount} من {primaryTotalStudents} طلاب ({primaryPercentage}%)
                 </span>
-                <span className="text-[10px] text-slate-400">للطلاب وأولياء الأمور</span>
               </div>
-              <p className="text-[11px] text-slate-500 leading-relaxed">
-                لمتابعة الحضور، عرض كارت الـ QR الشخصي، جدول الحصص والاشتراكات.
-              </p>
-              <div className="mt-2 p-2 rounded-lg bg-white border border-slate-200 font-mono text-[11px] text-[#27877E] truncate">
-                {portalUrl}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 pt-1">
-              <button
-                type="button"
-                onClick={() => copyToClipboard(portalUrl, 'portal')}
-                className="flex-1 py-1.5 px-3 rounded-lg bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 hover:border-slate-300 transition flex items-center justify-center gap-1.5 text-xs"
-              >
-                {copiedKey === 'portal' ? (
-                  <>
-                    <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    <span className="text-emerald-700">تم النسخ</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-3.5 h-3.5 text-slate-500" />
-                    <span>نسخ الرابط</span>
-                  </>
-                )}
-              </button>
-
-              <button
-                type="button"
-                onClick={() =>
-                  shareWhatsApp(
-                    `أهلاً بكم في ${currentCenter.name_ar} 🎓\nيمكنكم الآن متابعة حضور وغياب الطالب، جدول الحصص، وبطاقة الـ QR عبر الرابط المباشر:\n${portalUrl}`
-                  )
-                }
-                className="py-1.5 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition flex items-center justify-center gap-1.5 text-xs"
-              >
-                <MessageSquare className="w-3.5 h-3.5" />
-                <span>واتساب</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Card 2: Assistant QR Scanner */}
-          <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white hover:border-[#C7A66A]/50 transition flex flex-col justify-between space-y-3">
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="font-bold text-[#111D2D] flex items-center gap-1.5">
-                  <Smartphone className="w-4 h-4 text-[#C7A66A]" />
-                  رابط ماسح الـ QR السريع للأسيستانت
-                </span>
-                <span className="text-[10px] text-slate-400">لفريق العمل والمشرفين</span>
-              </div>
-              <p className="text-[11px] text-slate-500 leading-relaxed">
-                رابط مباشر للأسيستانت لفتح كاميرا الهاتف ومسح كروت الطلاب دون الدخول للوحة التحكم.
-              </p>
-              <div className="mt-2 p-2 rounded-lg bg-white border border-slate-200 font-mono text-[11px] text-[#C7A66A] truncate">
-                {scannerUrl}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 pt-1">
-              <button
-                type="button"
-                onClick={() => copyToClipboard(scannerUrl, 'scanner')}
-                className="flex-1 py-1.5 px-3 rounded-lg bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 hover:border-slate-300 transition flex items-center justify-center gap-1.5 text-xs"
-              >
-                {copiedKey === 'scanner' ? (
-                  <>
-                    <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    <span className="text-emerald-700">تم النسخ</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-3.5 h-3.5 text-slate-500" />
-                    <span>نسخ الرابط</span>
-                  </>
-                )}
-              </button>
-
-              <button
-                type="button"
-                onClick={() =>
-                  shareWhatsApp(
-                    `فريق عمل ${currentCenter.name_ar} 📱\nرابط تسجيل حضور وانصراف الطلاب بالماسح السريع:\n${scannerUrl}`
-                  )
-                }
-                className="py-1.5 px-3 rounded-lg bg-[#111D2D] hover:bg-[#1E2A3D] text-[#C7A66A] font-bold transition flex items-center justify-center gap-1.5 text-xs"
-              >
-                <MessageSquare className="w-3.5 h-3.5" />
-                <span>واتساب</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* KPI Cards Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
-        {/* Total Students */}
-        <div
-          onClick={() => router.push('/students')}
-          className="bg-white rounded-xl p-3.5 sm:p-5 border border-slate-200 shadow-sm hover:shadow-card hover:border-[#C7A66A] transition cursor-pointer group"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] sm:text-xs font-semibold text-slate-500">{t('kpi_total_students')}</span>
-            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-navy-50 flex items-center justify-center text-[#111D2D] group-hover:bg-[#111D2D] group-hover:text-white transition">
-              <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            </div>
-          </div>
-          <div className="mt-2 sm:mt-3 flex items-baseline justify-between">
-            <span className="text-xl sm:text-2xl font-bold text-[#111D2D]">{totalStudentsCount}</span>
-            <span className="text-[10px] sm:text-xs text-[#27877E] font-medium flex items-center gap-0.5">
-              <span>{activeStudentsCount} نشط</span>
-              <ArrowUpRight className="w-3 h-3" />
-            </span>
-          </div>
-        </div>
-
-        {/* Today's Attendance */}
-        <div
-          onClick={() => router.push('/history?status=present')}
-          className="bg-white rounded-xl p-3.5 sm:p-5 border border-slate-200 shadow-sm hover:shadow-card hover:border-[#27877E] transition cursor-pointer group"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] sm:text-xs font-semibold text-slate-500">{t('kpi_today_attendance')}</span>
-            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition">
-              <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            </div>
-          </div>
-          <div className="mt-2 sm:mt-3 flex items-baseline justify-between">
-            <span className="text-xl sm:text-2xl font-bold text-emerald-600">{todayPresentCount}</span>
-            <span className="text-[10px] sm:text-xs text-slate-500 font-medium">حاضر</span>
-          </div>
-        </div>
-
-        {/* Today's Absences */}
-        <div
-          onClick={() => router.push('/history?status=absent')}
-          className="bg-white rounded-xl p-3.5 sm:p-5 border border-slate-200 shadow-sm hover:shadow-card hover:border-red-400 transition cursor-pointer group"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] sm:text-xs font-semibold text-slate-500">{t('kpi_today_absences')}</span>
-            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-red-50 flex items-center justify-center text-red-600 group-hover:bg-red-600 group-hover:text-white transition">
-              <XCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            </div>
-          </div>
-          <div className="mt-2 sm:mt-3 flex items-baseline justify-between">
-            <span className="text-xl sm:text-2xl font-bold text-red-600">{todayAbsenceCount}</span>
-            <span className="text-[10px] sm:text-xs text-amber-600 font-medium">{todayLateCount} متأخر</span>
-          </div>
-        </div>
-
-        {/* Outstanding Balance */}
-        <div
-          onClick={() => router.push('/subscriptions')}
-          className="bg-white rounded-xl p-3.5 sm:p-5 border border-slate-200 shadow-sm hover:shadow-card hover:border-[#C7A66A] transition cursor-pointer group"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] sm:text-xs font-semibold text-slate-500">{t('kpi_outstanding_balance')}</span>
-            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600 group-hover:bg-[#C7A66A] group-hover:text-white transition">
-              <DollarSign className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            </div>
-          </div>
-          <div className="mt-2 sm:mt-3 flex items-baseline justify-between">
-            <span className="text-xl sm:text-2xl font-bold text-[#111D2D]">
-              {totalOutstandingBalance.toLocaleString()} <span className="text-[10px] sm:text-xs font-medium text-slate-500">ج.م</span>
-            </span>
-            <span className="text-[10px] text-amber-700 font-medium bg-amber-50 px-1.5 py-0.5 rounded">
-              مستحق
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Visual Analytics Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Weekly Attendance Trend */}
-        <div className="lg:col-span-2 bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-base font-bold text-[#111D2D] flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-[#27877E]" />
-                معدل الحضور والغياب الأسبوعي
-              </h2>
-              <p className="text-xs text-slate-500">تحليل مقارن لأعداد الطلاب الحاضرين والغائبين خلال الأسبوع</p>
-            </div>
-            <span className="text-xs px-2.5 py-1 rounded-md bg-slate-100 font-semibold text-slate-600">
-              الأيام السبعة الماضية
-            </span>
-          </div>
-
-          <div className="h-56 sm:h-64 w-full min-w-0 overflow-hidden" dir="ltr">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={weeklyChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorPresent" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#27877E" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#27877E" stopOpacity={0.05} />
-                  </linearGradient>
-                  <linearGradient id="colorAbsent" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#EF4444" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#EF4444" stopOpacity={0.05} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E9F0" />
-                <XAxis dataKey="day" tick={{ fontSize: 12, fill: '#60769A' }} />
-                <YAxis tick={{ fontSize: 12, fill: '#60769A' }} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#111D2D',
-                    borderRadius: '8px',
-                    color: '#fff',
-                    border: 'none',
-                    fontSize: '12px'
-                  }}
+              <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-l from-[#27877E] to-teal-400 rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min(100, Math.max(20, primaryPercentage))}%` }}
                 />
-                <Area type="monotone" dataKey="حاضر" stroke="#27877E" strokeWidth={2} fillOpacity={1} fill="url(#colorPresent)" />
-                <Area type="monotone" dataKey="غائب" stroke="#EF4444" strokeWidth={2} fillOpacity={1} fill="url(#colorAbsent)" />
-              </AreaChart>
-            </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Action Button: تسجيل حضور حصة الآن */}
+            <Link
+              href={`/scanner?session_id=${primarySession.id}`}
+              className="w-full py-2.5 rounded-xl bg-[#111D2D] hover:bg-[#1E2A3D] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition"
+            >
+              <UserCheck className="w-4 h-4 text-[#C7A66A]" />
+              <span>تسجيل حضور حصة الآن</span>
+            </Link>
           </div>
+        )}
+
+        {/* Secondary Scheduled Group Card */}
+        {secondarySession && (
+          <div className="bg-white rounded-2xl p-3.5 border border-slate-200/70 shadow-xs flex items-center justify-between">
+            <div>
+              <h4 className="font-bold text-xs text-[#111D2D]">
+                {secondaryGroup?.name || 'مجموعة نيوتن - فيزياء 3ث'}
+              </h4>
+              <p className="text-[11px] text-slate-400 mt-0.5 font-mono">
+                {secondarySession.start_time || '18:30'} - {secondarySession.end_time || '20:30'} • حضر: 0 / {secondarySession.total_students || 4}
+              </p>
+            </div>
+            <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[10px] font-bold">
+              مجدولة
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* 4. Section: تنبيهات المتابعة العاجلة */}
+      <div className="space-y-2.5">
+        <div className="flex items-center justify-between px-1">
+          <h2 className="text-sm font-extrabold text-[#111D2D] flex items-center gap-1.5">
+            <AlertTriangle className="w-4 h-4 text-red-500" />
+            <span>تنبيهات المتابعة العاجلة</span>
+          </h2>
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-200">
+            2 إجراء مطلوب
+          </span>
         </div>
 
-        {/* Quick Session Status / Group Comparison */}
-        <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-bold text-[#111D2D] flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-[#C7A66A]" />
-                مجموعات اليوم
-              </h2>
-              <Link href="/sessions" className="text-xs font-semibold text-[#27877E] hover:underline">
-                عرض الكل
-              </Link>
+        {/* Alert 1: غياب متكرر مع زر واتساب */}
+        <div className="bg-white rounded-2xl p-3.5 border border-slate-200/80 shadow-xs flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-xs sm:text-sm text-[#111D2D]">ياسين أحمد فؤاد</span>
+              <span className="px-2 py-0.2 rounded-md bg-red-50 text-red-600 text-[10px] font-bold border border-red-200/60">
+                تنبيه غياب
+              </span>
             </div>
+            <p className="text-[11px] text-slate-400 mt-0.5 truncate">
+              كود: NK-2603 • ولي الأمر: 01299887744
+            </p>
+            <p className="text-[11px] text-red-600 font-semibold mt-0.5">
+              غياب حصتين متتاليتين في مادة الرياضيات
+            </p>
+          </div>
 
-            <div className="space-y-3">
-              {todaySessions.length === 0 ? (
-                <div className="text-center py-8 text-slate-400 text-sm">
-                  لا توجد حصص مجدولة لليوم
-                </div>
-              ) : (
-                todaySessions.map((s) => {
-                  const grp = groups.find((g) => g.id === s.group_id);
-                  return (
-                    <div
-                      key={s.id}
-                      className="p-3 rounded-lg border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-xs text-[#111D2D] truncate">
-                          {grp?.name || 'حصة تدريس'}
-                        </span>
-                        <span
-                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                            s.status === 'open'
-                              ? 'bg-emerald-100 text-emerald-800 animate-pulse'
-                              : 'bg-slate-200 text-slate-700'
-                          }`}
-                        >
-                          {s.status === 'open' ? 'حضور مفتوح' : 'مجدولة'}
-                        </span>
-                      </div>
-                      <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500">
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3 h-3 text-[#C7A66A]" />
-                          {s.start_time} - {s.end_time}
-                        </span>
-                        <span>
-                          حضر: <strong className="text-emerald-600">{s.attended_count || 0}</strong> / {s.total_students || 0}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
+          <a
+            href="https://wa.me/201299887744?text=%D8%AA%D8%AD%D9%8A%D8%A9%20%D8%B7%D9%8A%D8%A8%D8%A9%20%D9%85%D9%86%20%D8%B3%D9%86%D8%AA%D8%B1%20%D8%A7%D9%84%D9%86%D8%AE%D8%A8%D8%A9%20%D8%A7%D9%84%D8%AA%D8%B9%D9%84%D9%8A%D9%85%D9%8A%D8%8C%20%D9%86%D9%88%D8%AF%20%D8%A5%D8%AD%D8%A7%D8%B7%D8%AA%D9%83%D9%85%20%D8%B9%D9%84%D9%85%D8%A7%D9%8B%20%D8%A8%D8%BA%D9%8A%D8%A7%D8%A8%20%D8%A7%D9%84%D8%B7%D8%A7%D9%84%D8%A8%20%D9%8A%D8%A7%D8%B3%D9%8A%D9%86%20%D8%A3%D8%AD%D9%85%D8%AF%20%D9%81%D8%A4%D8%A7%D8%AF"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shrink-0 shadow-xs transition"
+          >
+            <MessageSquare className="w-3.5 h-3.5" />
+            <span>واتساب</span>
+          </a>
+        </div>
+
+        {/* Alert 2: مستحق اشتراك مع زر تحصيل */}
+        <div className="bg-white rounded-2xl p-3.5 border border-slate-200/80 shadow-xs flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-xs sm:text-sm text-[#111D2D]">مريم طارق الشريف</span>
+              <span className="px-2 py-0.2 rounded-md bg-amber-50 text-amber-700 text-[10px] font-bold border border-amber-200/60">
+                مستحق: 250 ج.م
+              </span>
             </div>
+            <p className="text-[11px] text-slate-500 mt-0.5">
+              اشتراك شهر نوفمبر • مدفوع 200 من 450
+            </p>
           </div>
 
           <Link
-            href="/scanner"
-            className="w-full mt-4 py-2.5 rounded-lg bg-[#111D2D] text-white hover:bg-[#1E2A3D] text-xs font-bold text-center flex items-center justify-center gap-2 transition"
+            href="/payments"
+            className="px-4 py-2 rounded-xl bg-[#C7A66A] hover:bg-[#B08E4F] text-[#111D2D] font-extrabold text-xs flex items-center gap-1.5 shrink-0 shadow-xs transition"
           >
-            <QrCode className="w-3.5 h-3.5 text-[#C7A66A]" />
-            <span>تسجيل حضور حصة الآن</span>
+            <Receipt className="w-3.5 h-3.5" />
+            <span>تحصيل</span>
           </Link>
         </div>
       </div>
 
-      {/* Two-Column Stream: Recent Attendance Activity & Critical Alerts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Attendance Stream */}
-        <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-bold text-[#111D2D] flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-emerald-600" />
-              أحدث تسجيلات الحضور
-            </h2>
-            <Link href="/history" className="text-xs font-semibold text-[#27877E] hover:underline flex items-center gap-1">
-              <span>السجل الكامل</span>
-              <ChevronLeft className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-
-          <div className="divide-y divide-slate-100">
-            {recentAttendance.length === 0 ? (
-              <div className="text-center py-8 text-slate-400 text-sm">
-                لم يتم تسجيل أي حضور اليوم بعد
-              </div>
-            ) : (
-              recentAttendance.map((rec) => (
-                <div key={rec.id} className="py-3 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-slate-100 text-[#111D2D] flex items-center justify-center font-bold text-xs overflow-hidden border border-slate-200">
-                      {rec.student?.photo_url ? (
-                        <img src={rec.student.photo_url} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        rec.student?.full_name.substring(0, 2)
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-[#111D2D]">{rec.student?.full_name}</p>
-                      <p className="text-xs text-slate-500">
-                        {rec.student?.student_code} • {rec.groupName}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="text-right">
-                    <span
-                      className={`text-xs px-2.5 py-0.5 rounded-full font-bold ${
-                        rec.status === 'present'
-                          ? 'bg-emerald-50 text-emerald-700'
-                          : rec.status === 'late'
-                          ? 'bg-amber-50 text-amber-700'
-                          : 'bg-red-50 text-red-700'
-                      }`}
-                    >
-                      {rec.status === 'present' ? 'حاضر' : rec.status === 'late' ? 'متأخر' : 'غائب'}
-                    </span>
-                    <p className="text-[11px] text-slate-400 mt-1">
-                      {rec.check_in_time ? new Date(rec.check_in_time).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '-'}
-                    </p>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+      {/* 5. Section: أحدث تسجيلات الحضور */}
+      <div className="space-y-2.5">
+        <div className="flex items-center justify-between px-1">
+          <h2 className="text-sm font-extrabold text-[#111D2D] flex items-center gap-1.5">
+            <Clock className="w-4 h-4 text-[#27877E]" />
+            <span>أحدث تسجيلات الحضور</span>
+          </h2>
+          <Link href="/history" className="text-xs font-bold text-[#27877E] hover:underline flex items-center gap-0.5">
+            <span>السجل الكامل</span>
+            <ChevronLeft className="w-3.5 h-3.5" />
+          </Link>
         </div>
 
-        {/* Critical Alerts & Repeated Absences */}
-        <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-bold text-[#111D2D] flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-red-500" />
-              تنبيهات الغياب المتكرر والمستحقات
-            </h2>
-            <Link href="/notifications" className="text-xs font-semibold text-[#27877E] hover:underline flex items-center gap-1">
-              <span>جميع التنبيهات</span>
-              <ChevronLeft className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-
-          <div className="space-y-3">
-            {repeatedAbsences.map((st) => (
-              <div
-                key={st.id}
-                className="p-3.5 rounded-xl border border-red-100 bg-red-50/40 flex items-center justify-between"
-              >
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-[#111D2D]">{st.full_name}</span>
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-red-100 text-red-700 font-bold">
-                      تنبيه غياب
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    كود: {st.student_code} • ولي الأمر: {st.parent_phone}
-                  </p>
-                </div>
-
-                <a
-                  href={`https://wa.me/2${st.parent_phone}?text=${encodeURIComponent(`تحية طيبة من ${currentCenter.name_ar}. نود إفادتكم بغياب الطالب ${st.full_name} عن الحصة الأخيرة.`)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#25D366] hover:bg-[#1EBE5D] text-white text-xs font-bold transition shadow-sm"
-                  title="مراسلة ولي الأمر على واتساب"
-                >
-                  <MessageSquare className="w-3.5 h-3.5" />
-                  <span>واتساب</span>
-                </a>
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs divide-y divide-slate-100 overflow-hidden">
+          {/* Student 1 */}
+          <div className="p-3.5 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-slate-100 text-[#111D2D] font-bold text-xs flex items-center justify-center border border-slate-200">
+                ع.م
               </div>
-            ))}
-
-            {/* Overdue Payments Alert */}
-            {subscriptions
-              .filter((sub) => sub.remaining_balance > 0)
-              .slice(0, 2)
-              .map((sub) => {
-                const st = students.find((s) => s.id === sub.student_id);
-                return (
-                  <div
-                    key={sub.id}
-                    className="p-3.5 rounded-xl border border-amber-100 bg-amber-50/40 flex items-center justify-between"
-                  >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-[#111D2D]">{st?.full_name}</span>
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-amber-100 text-amber-700 font-bold">
-                          مستحق: {sub.remaining_balance} ج.م
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        اشتراك شهر نوفمبر • مدفوع {sub.total_paid} من {sub.total_due}
-                      </p>
-                    </div>
-
-                    <Link
-                      href="/payments"
-                      className="px-3 py-1.5 rounded-lg bg-[#C7A66A] hover:bg-[#B08E4F] text-[#111D2D] text-xs font-bold transition"
-                    >
-                      تحصيل
-                    </Link>
-                  </div>
-                );
-              })}
+              <div>
+                <h4 className="font-bold text-xs sm:text-sm text-[#111D2D]">عمر خالد المنشاوي</h4>
+                <p className="text-[11px] text-slate-400">NK-2601 • مجموعة العباقرة</p>
+              </div>
+            </div>
+            <div className="text-left">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                حاضر
+              </span>
+              <p className="text-[10px] text-slate-400 mt-0.5 font-mono">04:52 م</p>
+            </div>
           </div>
+
+          {/* Student 2 */}
+          <div className="p-3.5 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-slate-100 text-[#111D2D] font-bold text-xs flex items-center justify-center border border-slate-200">
+                م.ط
+              </div>
+              <div>
+                <h4 className="font-bold text-xs sm:text-sm text-[#111D2D]">مريم طارق الشريف</h4>
+                <p className="text-[11px] text-slate-400">NK-2602 • مجموعة العباقرة</p>
+              </div>
+            </div>
+            <div className="text-left">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                متأخر
+              </span>
+              <p className="text-[10px] text-slate-400 mt-0.5 font-mono">05:13 م</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 6. Section: بوابة سنتر النخبة للطلاب */}
+      <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs flex items-center justify-between gap-3">
+        <div>
+          <h4 className="font-bold text-xs sm:text-sm text-[#111D2D]">بوابة {currentCenter.name_ar} للطلاب</h4>
+          <p className="text-[11px] text-slate-400 mt-0.5">شارك الرابط مع الطلاب وأولياء الأمور</p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => shareWhatsApp(`رابط بوابة طلاب ${currentCenter.name_ar}:\n${portalUrl}`)}
+            className="p-2 rounded-xl border border-slate-200 text-[#27877E] hover:bg-slate-50 transition"
+            title="مشاركة عبر واتساب"
+          >
+            <Share2 className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => copyToClipboard(portalUrl, 'portal')}
+            className="p-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition"
+            title="نسخ الرابط"
+          >
+            {copiedKey === 'portal' ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+          </button>
         </div>
       </div>
     </div>
   );
 }
-

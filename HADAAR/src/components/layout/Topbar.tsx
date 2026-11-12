@@ -1,7 +1,7 @@
 'use client';
 
 // ====================================================================
-// HADAR SaaS Platform — Topbar Header (Fully Mobile Responsive)
+// HADAR SaaS Platform — Topbar Header (Exact Mobile Reference Design)
 // Developed by MADAAR Technologies
 // ====================================================================
 
@@ -19,7 +19,8 @@ import {
   Shield,
   LogOut,
   MessageCircle,
-  Menu
+  Menu,
+  GraduationCap
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/context';
 import { useData } from '@/lib/store/data-context';
@@ -88,32 +89,45 @@ export function Topbar({ onToggleMobileSidebar }: TopbarProps) {
   };
 
   return (
-    <header className="h-14 sm:h-16 bg-white border-b border-slate-200 px-3 sm:px-6 flex items-center justify-between sticky top-0 z-20 shadow-sm select-none">
-      {/* Left / Center Selection */}
-      <div className="flex items-center gap-2 sm:gap-4 min-w-0">
-        {/* Mobile Hamburger Drawer Button */}
-        <button
-          type="button"
-          onClick={onToggleMobileSidebar}
-          className="md:hidden p-1.5 rounded-lg text-slate-700 hover:bg-slate-100 transition flex items-center justify-center shrink-0"
-          aria-label="القائمة الجانبية"
-        >
-          <Menu className="w-5 h-5 text-[#111D2D]" />
-        </button>
+    <header className="h-16 bg-white border-b border-slate-200/80 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-20 shadow-xs select-none">
+      {/* Right Side (in RTL): User Profile & Center Status */}
+      <div className="flex items-center gap-2.5 min-w-0">
+        {/* User Identity Box */}
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl bg-[#111D2D] text-[#C7A66A] flex items-center justify-center font-bold text-xs shadow-xs shrink-0 border border-[#1E2A3D]">
+            <span>1.1</span>
+          </div>
 
-        {/* Multi-Tenant Center Switcher */}
-        <div className="relative shrink-0 max-w-[140px] sm:max-w-none">
+          <div className="text-right min-w-0">
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs sm:text-sm font-extrabold text-[#111D2D] truncate">
+                {currentUser.full_name}
+              </span>
+              <span className="px-1.5 py-0.2 rounded-md bg-teal-50 text-[#27877E] border border-teal-200/60 text-[10px] font-bold shrink-0">
+                {currentRole === 'super_admin' ? 'مدير المنصة' : currentRole === 'owner' ? 'مدير السنتر' : 'مساعد'}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-medium leading-none mt-0.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>{isOnline ? 'متصل بالإنترنت' : 'أوفلاين'}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Center Switcher (Desktop / Expanded) */}
+        <div className="relative hidden lg:block mr-2">
           <button
             onClick={() => setShowCenterMenu(!showCenterMenu)}
-            className="flex items-center gap-1.5 sm:gap-2.5 px-2.5 py-1.5 rounded-lg border border-slate-200 hover:border-[#C7A66A] bg-slate-50 transition text-xs sm:text-sm font-semibold text-[#111D2D]"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-slate-200 hover:border-[#C7A66A] bg-slate-50 transition text-xs font-semibold text-[#111D2D]"
           >
-            <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#27877E] shrink-0" />
+            <Building2 className="w-3.5 h-3.5 text-[#27877E] shrink-0" />
             <span className="truncate">{currentCenter.name_ar}</span>
             <ChevronDown className="w-3 h-3 text-slate-400 shrink-0" />
           </button>
 
           {showCenterMenu && (
-            <div className="absolute top-full mt-1.5 w-64 bg-white border border-slate-200 rounded-xl shadow-lg py-2 z-50">
+            <div className="absolute top-full mt-1.5 w-60 bg-white border border-slate-200 rounded-xl shadow-lg py-2 z-50">
               <div className="px-3 py-1.5 text-xs text-slate-400 font-semibold border-b border-slate-100">
                 السناتر التعليمية المتاحة:
               </div>
@@ -135,127 +149,46 @@ export function Topbar({ onToggleMobileSidebar }: TopbarProps) {
             </div>
           )}
         </div>
-
-        {/* Role Switcher Pill (Center Staff) */}
-        <div className="relative hidden sm:block">
-          <button
-            onClick={() => setShowRoleMenu(!showRoleMenu)}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-[#111D2D]/5 hover:bg-[#111D2D]/10 text-[#111D2D] border border-slate-200"
-          >
-            <Shield className="w-3.5 h-3.5 text-[#C7A66A]" />
-            <span>الدور: {currentRole === 'super_admin' ? 'مدير المنصة' : currentRole === 'owner' ? 'مدير السنتر' : 'مساعد حضور'}</span>
-            <ChevronDown className="w-3 h-3 text-slate-400" />
-          </button>
-
-          {showRoleMenu && (
-            <div className="absolute top-full mt-1.5 w-48 bg-white border border-slate-200 rounded-xl shadow-lg py-2 z-50">
-              <div className="px-3 py-1 text-[11px] text-slate-400 font-semibold border-b border-slate-100">
-                تبديل صلاحية المستخدم:
-              </div>
-              {(currentRole === 'super_admin' ? ['owner', 'assistant', 'super_admin'] : ['owner', 'assistant']).map((r) => (
-                <button
-                  key={r}
-                  onClick={() => {
-                    switchUserRole(r as UserRole);
-                    setShowRoleMenu(false);
-                  }}
-                  className={`w-full text-right px-3 py-1.5 text-xs hover:bg-slate-50 ${
-                    currentRole === r ? 'font-bold text-[#27877E] bg-teal-50' : 'text-slate-600'
-                  }`}
-                >
-                  {r === 'owner' ? 'مدير السنتر (Full Access)' : r === 'assistant' ? 'مساعد حضور (Scanner & Group)' : 'مدير المنصة (Super Admin)'}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
 
-      {/* Right Actions */}
-      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-        {/* Developer WhatsApp Contact Button */}
+      {/* Left Side (in RTL): Brand Badge, Notifications & Actions */}
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        {/* Developer WhatsApp (Desktop) */}
         <a
           href="https://wa.me/201202074649?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%D8%8C%20%D8%A3%D9%88%D8%AF%20%D8%A7%D9%84%D8%AA%D9%88%D8%A7%D8%B5%D9%84%20%D9%85%D8%B9%20%D9%85%D8%B7%D9%88%D8%B1%20%D9%85%D9%86%D8%B8%D9%88%D9%85%D8%A9%20%D8%AD%D9%8E%D8%B6%D9%8E%D8%B1"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-1.5 px-2 py-1.5 sm:px-3 sm:py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold transition"
+          className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold transition"
           title="تواصل مع المطور عبر واتساب (01202074649)"
         >
           <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
-          <span className="hidden md:inline">تواصل مع المطور</span>
+          <span>تواصل مع المطور</span>
         </a>
 
-        {/* Offline / Online Network Indicator */}
-        <div className="flex items-center gap-1 sm:gap-2">
-          {isOnline ? (
-            <span className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              <Wifi className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-              <span className="hidden lg:inline">{t('online')}</span>
-            </span>
-          ) : (
-            <span className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
-              <WifiOff className="w-3.5 h-3.5 text-amber-600" />
-              <span className="hidden sm:inline">{t('offline')}</span>
-            </span>
-          )}
-
-          {/* Pending Sync Counter */}
-          {pendingCount > 0 && (
-            <button
-              onClick={triggerAutoSync}
-              disabled={isSyncing || !isOnline}
-              className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition"
-              title="مزامنة الحضور المسجل أوفلاين"
-            >
-              <RefreshCw className={`w-3 h-3 ${isSyncing ? 'animate-spin' : ''}`} />
-              <span className="hidden sm:inline">{pendingCount} معلق</span>
-            </button>
-          )}
-        </div>
-
-        {/* Language Switcher */}
-        <button
-          onClick={() => setLocale(locale === 'ar' ? 'en' : 'ar')}
-          className="flex items-center gap-1 p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
-          title="تبديل اللغة / Switch Language"
-        >
-          <Globe className="w-3.5 h-3.5 text-[#C7A66A]" />
-          <span className="hidden sm:inline">{locale === 'ar' ? 'EN' : 'عربي'}</span>
-        </button>
-
-        {/* Notifications Icon */}
+        {/* Notifications Icon with Badge */}
         <Link
           href="/notifications"
-          className="relative p-1.5 sm:p-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-[#111D2D] transition"
+          className="relative p-2 rounded-xl border border-slate-200/80 bg-slate-50 text-slate-700 hover:bg-slate-100 transition flex items-center justify-center"
+          title="التنبيهات"
         >
-          <Bell className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          <Bell className="w-4 h-4" />
           {unreadNotificationsCount > 0 && (
-            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center">
+            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center shadow-xs">
               {unreadNotificationsCount}
             </span>
           )}
         </Link>
 
-        {/* User Profile Card & Logout */}
-        <div className="flex items-center gap-1.5 sm:gap-2.5 pl-1.5 sm:pl-2 border-l border-slate-200">
-          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#111D2D] text-[#C7A66A] flex items-center justify-center font-bold text-xs shadow-sm">
-            {currentUser.full_name.substring(0, 2)}
-          </div>
-          <div className="hidden md:block text-right">
-            <p className="text-xs font-semibold text-[#111D2D] leading-tight">{currentUser.full_name}</p>
-            <p className="text-[10px] text-slate-500 font-medium">
-              {currentRole === 'super_admin' ? 'Super Admin' : currentRole === 'owner' ? 'Owner' : 'Assistant'}
-            </p>
-          </div>
-          <Link
-            href="/login"
-            className="p-1 sm:p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-red-600 hover:bg-red-50 transition"
-            title="تسجيل الخروج / تبديل الحساب"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-          </Link>
-        </div>
+        {/* Brand Badge (As in Mobile Mockup) */}
+        <button
+          type="button"
+          onClick={onToggleMobileSidebar}
+          className="px-2.5 py-1.5 rounded-xl bg-[#111D2D] text-white flex items-center gap-1.5 text-xs font-bold shadow-xs hover:bg-[#1E2A3D] transition border border-[#1E2A3D]"
+          title="منظومة حَضَر الذكية"
+        >
+          <GraduationCap className="w-3.5 h-3.5 text-[#C7A66A]" />
+          <span>حَضَر</span>
+        </button>
       </div>
     </header>
   );
